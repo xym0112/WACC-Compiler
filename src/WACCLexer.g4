@@ -27,7 +27,7 @@ PRINT       : 'print';
 PRINTLN     : 'println';
 READ        : 'read';
 RETURN      : 'return';
-SKIP_TODO   : 'skip'; // SKIP IS RESERVED BY ANTLR
+SKIPSTAT    : 'skip';
 SND         : 'snd';
 STRING      : 'string';
 THEN        : 'then';
@@ -45,6 +45,14 @@ RBRACK      : ']';
 LPAREN      : '(';
 RPAREN      : ')';
 SEMI        : ';';
+
+HASH        : '#';
+QUOTE       : '"';
+SINGLEQUOTE : '\'';
+BACKSLASH   : '\\';
+UNDERSCORE  : '_';
+ESCAPEDCHAR : '0' | 'b' | 't' | 'n' | 'f' | 'r' | QUOTE | SINGLEQUOTE | BACKSLASH;
+
 
 // Operators
 
@@ -67,8 +75,12 @@ QUESTION    : '?';
 SUB         : '-';
 TILDE       : '~';
 
-// Whitespace and comments
+// Types
 
-WS          : [ \t\r\n\u000C]+ ->  skip;
-COMMENT     : '#' ~[\r\n]* -> skip;
+DIGIT         : [0..9]+;
+CHARACTER     : ~('\\' | '\'' | '"')*;
+LOWERCHAR     : [a..z];
+UPPERCHAR     : [A..Z];
+
+
 
