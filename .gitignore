@@ -3,4 +3,10 @@
 
 src/WACCLexer.tokens
 
+bin/
+
+antlr/WACCLexer.tokens
+
+src/antlr/
+
 wacc_40.iml

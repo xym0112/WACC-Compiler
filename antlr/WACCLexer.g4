@@ -47,12 +47,8 @@ RPAREN      : ')';
 SEMI        : ';';
 
 HASH        : '#';
-QUOTE       : '"';
-SINGLEQUOTE : '\'';
-BACKSLASH   : '\\';
 UNDERSCORE  : '_';
-ESCAPEDCHAR : '0' | 'b' | 't' | 'n' | 'f' | 'r' | QUOTE | SINGLEQUOTE | BACKSLASH;
-
+fragment ESCAPEDCHAR : [0btnfr"\'\\];
 
 // Operators
 
@@ -75,12 +71,20 @@ QUESTION    : '?';
 SUB         : '-';
 TILDE       : '~';
 
+WS          : [ \n]+ -> skip;
 // Types
 
-DIGIT         : [0..9]+;
-CHARACTER     : ~('\\' | '\'' | '"')*;
-LOWERCHAR     : [a..z];
-UPPERCHAR     : [A..Z];
+fragment DIGIT     : [0-9];
+fragment LOWERCHAR : [a..z];
+fragment UPPERCHAR : [A..Z];
+fragment INTSIGN   : ADD | SUB;
+fragment CHARACTER : ~[\'"] | [\\] ESCAPEDCHAR;
+CHAR      : '\'' CHARACTER '\'';
+Comment  : HASH ~[\r\n]* -> skip;
 
-
+IntLiter : INTSIGN? DIGIT+;
+BoolLiter: TRUE | FALSE;
+PairLiter: NULL;
+CharLiter: (LOWERCHAR | UPPERCHAR);
+StrLiter : '"' CHARACTER* '"';
 
