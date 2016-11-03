@@ -9,13 +9,13 @@ WS          : [ \t\n]+ -> skip;
 BEGIN       : 'begin';
 BOOL        : 'bool';
 CALL        : 'call';
-CHR         : 'char';
+CHAR        : 'char';
+CHR         : 'chr';
 DO          : 'do';
 DONE        : 'done';
 ELSE        : 'else';
 END         : 'end';
 EXIT        : 'exit';
-FALSE       : 'false';
 FI          : 'fi';
 FREE        : 'free';
 FST         : 'fst';
@@ -24,7 +24,6 @@ INT         : 'int';
 IS          : 'is';
 LEN         : 'len';
 NEWPAIR     : 'newpair';
-NULL        : 'null';
 ORD         : 'ord';
 PAIR        : 'pair';
 PRINT       : 'print';
@@ -35,7 +34,6 @@ SKIPSTAT    : 'skip';
 SND         : 'snd';
 STRING      : 'string';
 THEN        : 'then';
-TRUE        : 'true';
 WHILE       : 'while';
 
 // Seperators
@@ -51,7 +49,7 @@ RPAREN      : ')';
 SEMI        : ';';
 
 HASH        : '#';
-UNDERSCORE  : '_';
+fragment UNDERSCORE  : '_';
 fragment ESCAPEDCHAR : [0btnfr"\'\\];
 
 // Operators
@@ -77,15 +75,20 @@ TILDE       : '~';
 
 // Types
 
-DIGIT     : '0'..'9';
+fragment DIGIT     : '0'..'9';
 fragment LOWERCHAR : 'a'..'z';
 fragment UPPERCHAR : 'A'..'Z';
 fragment CHARACTER : ~[\'"] | [\\] ESCAPEDCHAR;
+fragment NULL      : 'null';
 INTSIGN   : ADD | SUB;
-CHAR      : '\'' CHARACTER '\'';
+fragment TRUE      : 'true';
+fragment FALSE     : 'false';
 
 BoolLiter: TRUE | FALSE;
 PairLiter: NULL;
-CharLiter: (LOWERCHAR | UPPERCHAR);
+CharLiter: '\'' CHARACTER '\'';
 StrLiter : '"' CHARACTER* '"';
+IntLiter : DIGIT+;
+
+Ident: (UNDERSCORE | LOWERCHAR | UPPERCHAR) (UNDERSCORE | UPPERCHAR | LOWERCHAR | IntLiter)*;
 

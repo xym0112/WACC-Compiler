@@ -5,105 +5,102 @@ options  {
 }
 
 // EOF indicates that the program must consume to the end of the input.
-prog: BEGIN (func)* stat END EOF;
+prog: BEGIN func* stat END EOF;
 
-func: type ident LPAREN (paramList)? RPAREN IS stat END;
+func: type Ident LPAREN (paramList)? RPAREN IS stat END;
 
 paramList: param (COMMA param)*;
 
-param: type ident;
+param: type Ident;
 
 stat: SKIPSTAT
-| EXIT expr
-| type ident ASSIGN assignRhs
-| assignLhs ASSIGN assignRhs
-| READ assignRhs
-| FREE expr
-| PRINT expr
-| PRINTLN expr
-| IF expr THEN stat ELSE stat FI
-| WHILE expr DO stat DONE
-| BEGIN stat END
-| stat SEMI stat
+    | EXIT expr
+    | type Ident ASSIGN assignRhs
+    | assignLhs ASSIGN assignRhs
+    | READ assignRhs
+    | FREE expr
+    | RETURN expr
+    | PRINT expr
+    | PRINTLN expr
+    | IF expr THEN stat ELSE stat FI
+    | WHILE expr DO stat DONE
+    | BEGIN stat END
+    | stat SEMI stat
 ;
 
-assignRhs: expr
-| arrayLiter
-| NEWPAIR LPAREN expr COMMA expr RPAREN
-| pairElem
-| CALL ident LPAREN (argList)? RPAREN
+assignRhs : expr
+          | arrayLiter
+          | NEWPAIR LPAREN expr COMMA expr RPAREN
+          | pairElem
+          | CALL Ident LPAREN (argList)? RPAREN
 ;
 
-assignLhs: ident
-| arrayElem
-| pairElem
+assignLhs: Ident
+         | arrayElem
+         | pairElem
 ;
 
 argList: expr (COMMA expr)*;
 
-pairElem: FST expr
-| SND expr
+pairElem : FST expr
+         | SND expr
 ;
 
 type: baseType
-| pairType
-| type LBRACK RBRACK
+    | pairType
+    | type LBRACK RBRACK
 ;
 
 baseType: INT
-| BOOL
-| CHR
-| STRING
+        | BOOL
+        | CHAR
+        | STRING
 ;
 
 pairType: PAIR LPAREN pairElemType COMMA pairElemType RPAREN;
 
 pairElemType: baseType
-| type LBRACK RBRACK
-| PAIR
+            | type LBRACK RBRACK
+            | PAIR
 ;
 
-expr: intLiter
-| BoolLiter
-| CHAR
-| StrLiter
-| PairLiter
-| ident
-| arrayElem
-| unArrayOper expr
-| expr binaryOper expr
-| LPAREN expr RPAREN
+expr: INTSIGN? IntLiter
+    | BoolLiter
+    | CharLiter
+    | StrLiter
+    | PairLiter
+    | Ident
+    | arrayElem
+    | unArrayOper expr
+    | expr binaryOper expr
+    | LPAREN expr RPAREN
 ;
 
 unArrayOper: EXCLAMATION
-| SUB
-| LEN
-| ORD
-| CHR
+           | SUB
+           | LEN
+           | ORD
+           | CHR
 ;
 
 binaryOper: MUL
-| DIV
-| MOD
-| ADD
-| SUB
-| GT
-| GE
-| LT
-| LE
-| EQUAL
-| NOTEQUAL
-| AND
-| OR
+          | DIV
+          | MOD
+          | ADD
+          | SUB
+          | GT
+          | GE
+          | LT
+          | LE
+          | EQUAL
+          | NOTEQUAL
+          | AND
+          | OR
 ;
 
-ident: (UNDERSCORE | CharLiter) (UNDERSCORE | CharLiter | intLiter)*;
-
-arrayElem: ident (LBRACK expr RBRACK)+;
+arrayElem: Ident (LBRACK expr RBRACK)+;
 
 arrayLiter: LBRACK (expr (COMMA expr)*)? RBRACK;
-
-intLiter : INTSIGN? DIGIT+;
 
 
 
