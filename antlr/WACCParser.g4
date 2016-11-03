@@ -27,16 +27,16 @@ stat: SKIPSTAT
 | stat SEMI stat
 ;
 
-assignRhs: ident
-| arrayElem
-| pairElem
-;
-
-assignLhs: expr
+assignRhs: expr
 | arrayLiter
 | NEWPAIR LPAREN expr COMMA expr RPAREN
 | pairElem
 | CALL ident LPAREN (argList)? RPAREN
+;
+
+assignLhs: ident
+| arrayElem
+| pairElem
 ;
 
 argList: expr (COMMA expr)*;
