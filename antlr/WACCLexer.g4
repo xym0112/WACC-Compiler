@@ -9,7 +9,7 @@ WS          : [ \t\n]+ -> skip;
 BEGIN       : 'begin';
 BOOL        : 'bool';
 CALL        : 'call';
-CHR         : 'chr';
+CHR         : 'char';
 DO          : 'do';
 DONE        : 'done';
 ELSE        : 'else';
@@ -23,7 +23,7 @@ IF          : 'if';
 INT         : 'int';
 IS          : 'is';
 LEN         : 'len';
-NEWPAIR     : 'nepair';
+NEWPAIR     : 'newpair';
 NULL        : 'null';
 ORD         : 'ord';
 PAIR        : 'pair';
@@ -77,15 +77,13 @@ TILDE       : '~';
 
 // Types
 
-fragment DIGIT     : '0'..'9';
+DIGIT     : '0'..'9';
 fragment LOWERCHAR : 'a'..'z';
 fragment UPPERCHAR : 'A'..'Z';
-fragment INTSIGN   : ADD | SUB;
 fragment CHARACTER : ~[\'"] | [\\] ESCAPEDCHAR;
+INTSIGN   : ADD | SUB;
 CHAR      : '\'' CHARACTER '\'';
 
-
-IntLiter : INTSIGN? DIGIT+;
 BoolLiter: TRUE | FALSE;
 PairLiter: NULL;
 CharLiter: (LOWERCHAR | UPPERCHAR);

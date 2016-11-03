@@ -41,8 +41,8 @@ assignLhs: ident
 
 argList: expr (COMMA expr)*;
 
-pairElem: FST
-| SND
+pairElem: FST expr
+| SND expr
 ;
 
 type: baseType
@@ -63,9 +63,9 @@ pairElemType: baseType
 | PAIR
 ;
 
-expr: IntLiter
+expr: intLiter
 | BoolLiter
-| CharLiter
+| CHAR
 | StrLiter
 | PairLiter
 | ident
@@ -97,11 +97,13 @@ binaryOper: MUL
 | OR
 ;
 
-ident: (UNDERSCORE | CharLiter) (UNDERSCORE | CharLiter | IntLiter)*;
+ident: (UNDERSCORE | CharLiter) (UNDERSCORE | CharLiter | intLiter)*;
 
-arrayElem: ident LBRACK expr RBRACK;
+arrayElem: ident (LBRACK expr RBRACK)+;
 
 arrayLiter: LBRACK (expr (COMMA expr)*)? RBRACK;
+
+intLiter : INTSIGN? DIGIT+;
 
 
 
