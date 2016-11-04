@@ -2,14 +2,13 @@ lexer grammar WACCLexer;
 
 // Reserved Keywords
 
-Comment  : HASH ~[\r\n]* -> skip;
-
-WS          : [ \t\n]+ -> skip;
+fragment INT    : 'int';
+fragment BOOL   : 'bool';
+fragment CHAR   : 'char';
+fragment STRING : 'string';
 
 BEGIN       : 'begin';
-BOOL        : 'bool';
 CALL        : 'call';
-CHAR        : 'char';
 CHR         : 'chr';
 DO          : 'do';
 DONE        : 'done';
@@ -20,7 +19,6 @@ FI          : 'fi';
 FREE        : 'free';
 FST         : 'fst';
 IF          : 'if';
-INT         : 'int';
 IS          : 'is';
 LEN         : 'len';
 NEWPAIR     : 'newpair';
@@ -32,14 +30,12 @@ READ        : 'read';
 RETURN      : 'return';
 SKIPSTAT    : 'skip';
 SND         : 'snd';
-STRING      : 'string';
 THEN        : 'then';
 WHILE       : 'while';
 
 // Seperators
 
 COMMA       : ',';
-DOT         : '.';
 LBRACE      : '{';
 LBRACK      : '[';
 RBRACE      : '}';
@@ -48,15 +44,15 @@ LPAREN      : '(';
 RPAREN      : ')';
 SEMI        : ';';
 
-HASH        : '#';
+fragment HASH        : '#';
 fragment UNDERSCORE  : '_';
 fragment ESCAPEDCHAR : [0btnfr"\'\\];
 
 // Operators
 
+ASSIGN      : '=';
 ADD         : '+';
 AND         : '&&';
-ASSIGN      : '=';
 COLON       : ':';
 DIV         : '/';
 EQUAL       : '==';
@@ -69,9 +65,7 @@ MOD         : '%';
 MUL         : '*';
 NOTEQUAL    : '!=';
 OR          : '||';
-QUESTION    : '?';
 SUB         : '-';
-TILDE       : '~';
 
 // Types
 
@@ -80,16 +74,26 @@ fragment LOWERCHAR : 'a'..'z';
 fragment UPPERCHAR : 'A'..'Z';
 fragment CHARACTER : ~[\'"] | [\\] ESCAPEDCHAR;
 fragment NULL      : 'null';
-INTSIGN   : ADD | SUB;
+fragment INTSIGN   : ADD | SUB;
 fragment TRUE      : 'true';
 fragment FALSE     : 'false';
 
-BoolLiter: TRUE | FALSE;
-PairLiter: NULL;
-CharLiter: '\'' CHARACTER '\'';
-StrLiter : '"' CHARACTER* '"';
-UNSIGNED: DIGIT+;
-SIGNED : INTSIGN DIGIT+;
+UNSIGNED           : DIGIT+;
 
-Ident: (UNDERSCORE | LOWERCHAR | UPPERCHAR) (UNDERSCORE | UPPERCHAR | LOWERCHAR |  UNSIGNED)*;
+// Literals
 
+BoolLiter : TRUE | FALSE;
+PairLiter : NULL;
+CharLiter : '\'' CHARACTER '\'';
+StrLiter  : '"' CHARACTER* '"';
+
+BaseType : INT
+         | BOOL
+         | CHAR
+         | STRING
+;
+
+Ident    : (UNDERSCORE | LOWERCHAR | UPPERCHAR) (UNDERSCORE | UPPERCHAR | LOWERCHAR | UNSIGNED)*;
+
+Comment  : HASH ~[\r\n]* -> skip;
+WS       : [ \t\n]+ -> skip;

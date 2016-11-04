@@ -4,107 +4,94 @@ options  {
     tokenVocab=WACCLexer;
 }
 
-// EOF indicates that the program must consume to the end of the input.
-prog: BEGIN func* stat END EOF;
+prog : BEGIN func* stat END EOF;
 
-func: type Ident LPAREN (paramList)? RPAREN IS stat END;
+func      : type Ident LPAREN (paramList)? RPAREN IS stat END;
+paramList : param (COMMA param)*;
+param     : type Ident;
 
-paramList: param (COMMA param)*;
-
-param: type Ident;
-
-stat: SKIPSTAT
-    | EXIT expr
-    | type Ident ASSIGN assignRhs
-    | assignLhs ASSIGN assignRhs
-    | READ assignRhs
-    | FREE expr
-    | RETURN expr
-    | PRINT expr
-    | PRINTLN expr
-    | IF expr THEN stat ELSE stat FI
-    | WHILE expr DO stat DONE
-    | BEGIN stat END
-    | stat SEMI stat
+stat : SKIPSTAT                                     #SKIPSTAT
+     | EXIT expr                                    #EXIT
+     | type Ident ASSIGN assignRhs                  #CREATEVAR
+     | assignLhs ASSIGN assignRhs                   #ASSIGNVAR
+     | READ assignRhs                               #READ
+     | FREE expr                                    #FREE
+     | RETURN expr                                  #RETURN
+     | PRINT expr                                   #PRINT
+     | PRINTLN expr                                 #PRINTLN
+     | IF expr THEN stat ELSE stat FI               #IF
+     | WHILE expr DO stat DONE                      #WHILE
+     | BEGIN stat END                               #BEGIN
+     | stat SEMI stat                               #SEQUENCE
 ;
 
-assignRhs : expr
-          | arrayLiter
-          | NEWPAIR LPAREN expr COMMA expr RPAREN
-          | pairElem
-          | CALL Ident LPAREN (argList)? RPAREN
+assignRhs : expr                                    #RHSEXPR
+          | arrayLiter                              #RHSARRLITER
+          | NEWPAIR LPAREN expr COMMA expr RPAREN   #RHSNEWPAIR
+          | pairElem                                #RHSPAIR
+          | CALL Ident LPAREN (argList)? RPAREN     #RHSCALLFUNC
 ;
 
-assignLhs: Ident
-         | arrayElem
-         | pairElem
+assignLhs : Ident                                   #LHSIDENT
+          | arrayElem                               #LHSARRAYELEM
+          | pairElem                                #LHSPAIRELEM
 ;
 
-argList: expr (COMMA expr)*;
+argList   : expr (COMMA expr)*;
 
-pairElem : FST expr
-         | SND expr
+pairElem  : FST expr                                #PAIRFST
+          | SND expr                                #PAIRSND
 ;
 
-type: baseType
-    | pairType
-    | type LBRACK RBRACK
+type : BaseType                                     #TYPEBASE
+     | pairType                                     #TYPEPAIR
+     | type LBRACK RBRACK                           #TYPEARRAY
 ;
 
-baseType: INT
-        | BOOL
-        | CHAR
-        | STRING
+pairType : PAIR LPAREN pairElemType COMMA pairElemType RPAREN;
+
+pairElemType : BaseType                             #PAIRBASETYPE
+             | type LBRACK RBRACK                   #PAIRARRAYTYPE
+             | PAIR                                 #PAIRPAIR
 ;
 
-pairType: PAIR LPAREN pairElemType COMMA pairElemType RPAREN;
-
-pairElemType: baseType
-            | type LBRACK RBRACK
-            | PAIR
+expr : UNSIGNED                                     #UNSIGNED
+     | BoolLiter                                    #BOOLLITER
+     | CharLiter                                    #CHARLITER
+     | StrLiter                                     #STRLITER
+     | PairLiter                                    #PAIRLITER
+     | Ident                                        #EXPRIDENT
+     | arrayElem                                    #EXPRARRAYELEM
+     | unaryOper expr                               #UNARYOP
+     | expr binaryOper expr                         #BINARYOP
+     | LPAREN expr RPAREN                           #BRACKETEXPR
 ;
 
-expr: (SIGNED | UNSIGNED)
-    | (SIGNED | UNSIGNED) SIGNED
-    | BoolLiter
-    | CharLiter
-    | StrLiter
-    | PairLiter
-    | Ident
-    | arrayElem
-    | unArrayOper expr
-    | expr binaryOper expr
-    | LPAREN expr RPAREN
+unaryOper  : EXCLAMATION                            #UNOPEXCLAMATION
+           | SUB                                    #UNOPSUB
+           | ADD                                    #UNOPADD
+           | LEN                                    #UNOPLEN
+           | ORD                                    #UNOPORD
+           | CHR                                    #UNOPCHR
 ;
 
-
-unArrayOper: EXCLAMATION
-           | SUB
-           | LEN
-           | ORD
-           | CHR
+binaryOper : MUL                                    #BIOPMUL
+           | DIV                                    #BIOPDIV
+           | MOD                                    #BIOPMOD
+           | ADD                                    #BIOPADD
+           | SUB                                    #BIOPSUB
+           | GT                                     #BIOPGT
+           | GE                                     #BIOPGE
+           | LT                                     #BIOPLT
+           | LE                                     #BIOPLE
+           | EQUAL                                  #BIOPEQUAL
+           | NOTEQUAL                               #BIOPNQ
+           | AND                                    #BIOPAND
+           | OR                                     #BIOPOR
 ;
 
-binaryOper: MUL
-          | DIV
-          | MOD
-          | ADD
-          | SUB
-          | GT
-          | GE
-          | LT
-          | LE
-          | EQUAL
-          | NOTEQUAL
-          | AND
-          | OR
-;
-
-arrayElem: Ident (LBRACK expr RBRACK)+;
-
-arrayLiter: LBRACK (expr (COMMA expr)*)? RBRACK;
-
-
+arrayElem  : Ident (LBRACK expr RBRACK)+;
+arrayLiter : LBRACK (expr (COMMA expr)*)? RBRACK;
 
 
 
