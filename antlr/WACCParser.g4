@@ -64,7 +64,8 @@ pairElemType: baseType
             | PAIR
 ;
 
-expr: INTSIGN? IntLiter
+expr: (SIGNED | UNSIGNED)
+    | (SIGNED | UNSIGNED) SIGNED
     | BoolLiter
     | CharLiter
     | StrLiter
@@ -75,6 +76,7 @@ expr: INTSIGN? IntLiter
     | expr binaryOper expr
     | LPAREN expr RPAREN
 ;
+
 
 unArrayOper: EXCLAMATION
            | SUB
@@ -101,7 +103,6 @@ binaryOper: MUL
 arrayElem: Ident (LBRACK expr RBRACK)+;
 
 arrayLiter: LBRACK (expr (COMMA expr)*)? RBRACK;
-
 
 
 
