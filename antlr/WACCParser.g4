@@ -6,13 +6,23 @@ options  {
 
 prog : BEGIN func* stat END EOF;
 
-func      : type Ident LPAREN (paramList)? RPAREN IS stat END;
+func      : type Ident LPAREN (paramList)? RPAREN IS stat END
+          | type Ident (paramList)? RPAREN IS stat END
+           {System.out.println("Missing token '(' token at line " + $Ident.line); System.exit(100);}
+          | type Ident LPAREN (paramList)? IS stat END
+           {System.out.println("Missing token ')' token at line " + $Ident.line); System.exit(100);}
+          | type Ident LPAREN (paramList)? RPAREN stat END
+           {System.out.println("Missing token 'is' token around line " + $RPAREN.line); System.exit(100);}
+          | type Ident LPAREN (paramList)? RPAREN IS stat
+           {System.out.println("Missing token 'end' token around line " + String.valueOf($IS.line + 2)); System.exit(100);}
+;
+
 paramList : param (COMMA param)*;
 param     : type Ident;
 
 stat : SKIPSTAT                                     #SKIPSTAT
      | EXIT expr                                    #EXIT
-     | type Ident ASSIGN assignRhs                  #CREATEVAR
+     | createVariable                               #CREATEVAR
      | assignLhs ASSIGN assignRhs                   #ASSIGNVAR
      | READ assignRhs                               #READ
      | FREE expr                                    #FREE
@@ -25,34 +35,39 @@ stat : SKIPSTAT                                     #SKIPSTAT
      | whileStatement                               #WHILE
 ;
 
+createVariable : type Ident ASSIGN assignRhs
+               | type Ident assignRhs
+                {System.out.println("Missing '=' token at line " + $Ident.line); System.exit(100);}
+;
+
 ifStatement : IF expr THEN stat ELSE stat FI
             | IF expr stat ELSE stat FI
-             {System.out.println("missing Then statement: at line" + $IF.line);}
+             {System.out.println("Missing 'then' token at line " + $IF.line); System.exit(100);}
             | IF expr THEN stat stat FI
-             {System.out.println("missing Else statement: at line" + String.valueOf($THEN.line+1));}
+             {System.out.println("Missing 'else' token around line " + String.valueOf($THEN.line+1)); System.exit(100);}
             | IF expr THEN stat ELSE stat
-             {System.out.println("missing FI statement: at line" + String.valueOf($ELSE.line+2));}
+             {System.out.println("Missing 'fi' token around line " + String.valueOf($ELSE.line+2)); System.exit(100);}
             | expr THEN stat ELSE stat FI
-             {System.out.println("missing IF statement: at line " + String.valueOf($THEN.line-1));}
+             {System.out.println("Missing 'if' token around line  " + String.valueOf($THEN.line-1)); System.exit(100);}
             | IF THEN stat stat FI
-             {System.out.println("missing if condition: at line" + $IF.line);}
+             {System.out.println("Missing condition at line " + $IF.line); System.exit(100);}
             | IF expr THEN ELSE stat FI
-             {System.out.println("missing Then statement: at line" + $THEN.line);}
+             {System.out.println("Missing then body at line " + $THEN.line); System.exit(100);}
             | IF expr THEN stat ELSE FI
-             {System.out.println("missing Else statement: at line" + $ELSE.line);}
+             {System.out.println("Missing else body at line " + $ELSE.line); System.exit(100);}
             ;
 
 whileStatement : WHILE expr DO stat DONE
                | expr DO stat DONE
-                {System.out.println("missing While statement: at line" + String.valueOf($DO.line-1));}
+                {System.out.println("Missing 'while' token around line " + String.valueOf($DO.line-1)); System.exit(100);}
                | WHILE DO stat DONE
-                {System.out.println("missing While statement: at line" + $WHILE.line);}
+                {System.out.println("Missing while condition at line " + $WHILE.line);}
                | WHILE expr stat DONE
-                {System.out.println("missing While statement: at line" + String.valueOf($WHILE.line+1));}
+                {System.out.println("Missing while body around line " + String.valueOf($WHILE.line+1)); System.exit(100);}
                | WHILE expr DO DONE
-                {System.out.println("missing While statement: at line" + $DO.line);}
+                {System.out.println("Missing do body at line " + $DO.line); System.exit(100);}
                | WHILE expr DO stat
-                {System.out.println("missing While statement: at line" + String.valueOf($DO.line+2));}
+                {System.out.println("Missing 'done' token around line " + String.valueOf($DO.line+2)); System.exit(100);}
                ;
 
 
