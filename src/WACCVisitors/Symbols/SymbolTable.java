@@ -4,8 +4,8 @@ package WACCVisitors.Symbols;
 import java.util.HashMap;
 
 public class SymbolTable {
-    SymbolTable encSymTable;
-    HashMap<WACC_Variable, WACC_Type> dictionary;
+    private SymbolTable encSymTable;
+    private HashMap<String, WACC_Type> dictionary;
 
     public SymbolTable(SymbolTable symbolTable) {
         dictionary = new HashMap();
@@ -22,15 +22,15 @@ public class SymbolTable {
         return encSymTable;
     }
 
-    public WACC_Type add(WACC_Variable varId, WACC_Type var) {
+    public WACC_Type add(String varId, WACC_Type var) {
         return dictionary.put(varId,var);
     }
 
-    public WACC_Type lookup(WACC_Variable varId) {
+    public WACC_Type lookup(String varId) {
         return dictionary.get(varId);
     }
 
-    public WACC_Type lookUpAll(WACC_Variable varId) {
+    public WACC_Type lookUpAll(String varId) {
 
         SymbolTable self = this;
         WACC_Type var = null;
@@ -40,10 +40,10 @@ public class SymbolTable {
             if (var  != null) {
                 return var;
             }
-            self = self.encSymTable;
+            self = self.getEncSymTable();
         }
         return null;
     }
-
-
 }
+
+
