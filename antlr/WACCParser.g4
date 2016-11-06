@@ -19,11 +19,42 @@ stat : SKIPSTAT                                     #SKIPSTAT
      | RETURN expr                                  #RETURN
      | PRINT expr                                   #PRINT
      | PRINTLN expr                                 #PRINTLN
-     | IF expr THEN stat ELSE stat FI               #IF
-     | WHILE expr DO stat DONE                      #WHILE
      | BEGIN stat END                               #BEGIN
      | stat SEMI stat                               #SEQUENCE
+     | ifStatement                                  #IF
+     | whileStatement                               #WHILE
 ;
+
+ifStatement : IF expr THEN stat ELSE stat FI
+            | IF expr stat ELSE stat FI
+             {System.out.println("missing Then statement: at line" + $IF.line);}
+            | IF expr THEN stat stat FI
+             {System.out.println("missing Else statement: at line" + String.valueOf($THEN.line+1));}
+            | IF expr THEN stat ELSE stat
+             {System.out.println("missing FI statement: at line" + String.valueOf($ELSE.line+2));}
+            | expr THEN stat ELSE stat FI
+             {System.out.println("missing IF statement: at line " + String.valueOf($THEN.line-1));}
+            | IF THEN stat stat FI
+             {System.out.println("missing if condition: at line" + $IF.line);}
+            | IF expr THEN ELSE stat FI
+             {System.out.println("missing Then statement: at line" + $THEN.line);}
+            | IF expr THEN stat ELSE FI
+             {System.out.println("missing Else statement: at line" + $ELSE.line);}
+            ;
+
+whileStatement : WHILE expr DO stat DONE
+               | expr DO stat DONE
+                {System.out.println("missing While statement: at line" + String.valueOf($DO.line-1));}
+               | WHILE DO stat DONE
+                {System.out.println("missing While statement: at line" + $WHILE.line);}
+               | WHILE expr stat DONE
+                {System.out.println("missing While statement: at line" + String.valueOf($WHILE.line+1));}
+               | WHILE expr DO DONE
+                {System.out.println("missing While statement: at line" + $DO.line);}
+               | WHILE expr DO stat
+                {System.out.println("missing While statement: at line" + String.valueOf($DO.line+2));}
+               ;
+
 
 assignRhs : expr                                    #RHSEXPR
           | arrayLiter                              #RHSARRLITER
