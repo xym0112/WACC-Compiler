@@ -1,13 +1,25 @@
 package WACCVisitors;
 
-import WACCVisitors.Symbols.WACC_Char;
-import WACCVisitors.Symbols.WACC_Type;
+import WACCVisitors.Symbols.SymbolTable;
+import WACCVisitors.Symbols.*;
 import antlr.WACCParser;
 import antlr.WACCParserBaseVisitor;
-import org.antlr.v4.runtime.misc.NotNull;
+import org.jetbrains.annotations.NotNull;
 
 
 public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
+
+    SymbolTable ctxsymbolTable;
+
+    public WACC_Visitor() {
+        ctxsymbolTable = new SymbolTable();
+        initCtxSymbolTable();
+    }
+
+    private void initCtxSymbolTable(){
+        return;
+    }
+
     @Override
     public WACC_Type visitPRINT(@NotNull WACCParser.PRINTContext ctx) {
         return super.visitPRINT(ctx);
@@ -20,7 +32,9 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitArrayLiter(@NotNull WACCParser.ArrayLiterContext ctx) {
-        return super.visitArrayLiter(ctx);
+        return null;
+        //TODO
+        //notnoreturn new WACC_Array();
     }
 
     @Override
@@ -60,12 +74,19 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitBIOPMOD(@NotNull WACCParser.BIOPMODContext ctx) {
+        WACC_Type lhsType = visit(ctx.MOD().getChild(0));
+        WACC_Type rhsType = visit(ctx.MOD().getChild(1));
+        if ((lhsType instanceof WACC_Int) && (rhsType instanceof WACC_Int)){
+
+        } else {
+//ERROR
+        }
         return super.visitBIOPMOD(ctx);
     }
 
     @Override
     public WACC_Type visitBOOLLITER(@NotNull WACCParser.BOOLLITERContext ctx) {
-        return new WACC_Char();
+        return new WACC_Bool();
     }
 
     @Override
@@ -105,7 +126,8 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitEXPRIDENT(@NotNull WACCParser.EXPRIDENTContext ctx) {
-        return super.visitEXPRIDENT(ctx);
+        String name = ctx.Ident().getText();
+        return ctxsymbolTable.lookUpAll(name);
     }
 
     @Override
@@ -140,7 +162,7 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitSTRLITER(@NotNull WACCParser.STRLITERContext ctx) {
-        return super.visitSTRLITER(ctx);
+        return new WACC_String();
     }
 
     @Override
@@ -165,12 +187,12 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitPAIRLITER(@NotNull WACCParser.PAIRLITERContext ctx) {
-        return super.visitPAIRLITER(ctx);
+        return null;
     }
 
     @Override
     public WACC_Type visitCHARLITER(@NotNull WACCParser.CHARLITERContext ctx) {
-        return super.visitCHARLITER(ctx);
+        return new WACC_Char();
     }
 
     @Override
@@ -200,7 +222,7 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitUNSIGNED(@NotNull WACCParser.UNSIGNEDContext ctx) {
-        return super.visitUNSIGNED(ctx);
+        return new WACC_Int();
     }
 
     @Override
