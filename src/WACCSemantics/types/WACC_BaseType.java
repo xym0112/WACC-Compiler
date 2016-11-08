@@ -1,6 +1,6 @@
 package WACCSemantics.types;
 
-public class WACC_BaseType extends WACC_Type {
+public class WACC_BaseType implements WACC_Type {
     private BaseType type;
 
     public WACC_BaseType(BaseType type) {
@@ -12,7 +12,7 @@ public class WACC_BaseType extends WACC_Type {
     }
 
     @Override
-    protected boolean checkType(WACC_Type ident) {
+    public boolean checkType(WACC_Type ident) {
 
         // TODO: consider strings
 
@@ -21,4 +21,13 @@ public class WACC_BaseType extends WACC_Type {
         WACC_BaseType identBaseType = (WACC_BaseType) ident;
         return identBaseType.getType().equals(this.type);
     }
+
+    @Override
+    public String toString() {
+        return "WACC_BaseType{" +
+                "type=" + type +
+                '}';
+    }
+
+
 }

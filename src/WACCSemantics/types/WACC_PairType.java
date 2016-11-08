@@ -1,6 +1,6 @@
 package WACCSemantics.types;
 
-public class WACC_PairType extends WACC_Type {
+public class WACC_PairType implements WACC_Type {
     private WACC_Type first;
     private WACC_Type second;
 
@@ -18,7 +18,7 @@ public class WACC_PairType extends WACC_Type {
     }
 
     @Override
-    protected boolean checkType(WACC_Type ident) {
+    public boolean checkType(WACC_Type ident) {
         if (!(ident instanceof WACC_PairType)) return false;
 
         WACC_PairType identPairType = (WACC_PairType) ident;

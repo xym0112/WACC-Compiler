@@ -1,5 +1,5 @@
 package WACCSemantics.types;
 
-public abstract class WACC_Type {
-    protected abstract boolean checkType(WACC_Type ident);
+public interface WACC_Type {
+    boolean checkType(WACC_Type ident);
 }
