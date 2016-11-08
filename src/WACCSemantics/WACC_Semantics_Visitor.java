@@ -50,15 +50,16 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
             }
         }
 
+        // set current symbol table to parent
+        WACC_Type statRetType = visit(ctx.stat());
+
+        currentST = currentST.getEncSymTable();
+
         if (!funcParams.isEmpty()) {
             currentST.addFunc(funcName, new WACC_Function(funcRetType, funcParams, currentST));
         } else {
             currentST.addFunc(funcName, new WACC_Function(funcRetType, currentST));
         }
-
-        // set current symbol table to parent
-        WACC_Type statRetType = visit(ctx.stat());
-        currentST = currentST.getEncSymTable();
 
         if(!funcRetType.checkType(statRetType)) {
             semanticError("Function " + funcName + " has conflicting return types",
@@ -102,6 +103,21 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
     @Override
     public WACC_Type visitUNSIGNED(@NotNull UNSIGNEDContext ctx) {
         return new WACC_BaseType(BaseType.INT);
+    }
+
+    @Override
+    public WACC_Type visitBOOLLITER(@NotNull BOOLLITERContext ctx) {
+        return new WACC_BaseType(BaseType.BOOL);
+    }
+
+    @Override
+    public WACC_Type visitCHARLITER(@NotNull CHARLITERContext ctx) {
+        return new WACC_BaseType(BaseType.CHAR);
+    }
+
+    @Override
+    public WACC_Type visitSTRLITER(@NotNull STRLITERContext ctx) {
+        return new WACC_BaseType(BaseType.STRING);
     }
 
     // Print Semantic Error helper method
