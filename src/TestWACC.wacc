@@ -6,5 +6,12 @@
 # Program:
 
 begin
-  int a = -'a'
+char fili() is
+    return 'c'
+  end
+  int f() is
+    return 878
+  end
+   int i = 3 * 2;
+  println x
 end
