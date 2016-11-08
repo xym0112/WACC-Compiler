@@ -101,6 +101,20 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
     }
 
     @Override
+    public WACC_Type visitBEGIN(@NotNull BEGINContext ctx) {
+        // Create a new symbol table with the current one as its parent
+        currentST = new SymbolTable(currentST);
+
+        //TODO:Test vars once we have them
+        WACC_Type statType = visit(ctx.stat());
+
+        // Make current symbol table the previous ones parent
+        currentST = currentST.getEncSymTable();
+
+        return statType;
+    }
+
+    @Override
     public WACC_Type visitUNSIGNED(@NotNull UNSIGNEDContext ctx) {
         return new WACC_BaseType(BaseType.INT);
     }
