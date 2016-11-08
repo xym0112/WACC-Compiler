@@ -1,9 +1,5 @@
 package WACCVisitors.Symbols;
 
-
-public class WACC_Type extends WACC_Identifier{
-    @Override
-    public String toString() {
-        return "WACC_Type";
-    }
+public abstract class WACC_Type {
+    protected abstract boolean checkType(WACC_Type ident);
 }

@@ -1,7 +1,5 @@
-import WACCVisitors.WACC_Visitor;
 import antlr.WACCLexer;
 import antlr.WACCParser;
-import antlr.*;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -21,8 +19,8 @@ public class Demo {
             ParseTree tree = parser.prog();
 
 
-            WACC_Visitor visitor = new WACC_Visitor();
-            visitor.visit(tree); // need to add thing
+//            WACC_Visitor visitor = new WACC_Visitor();
+//            visitor.visit(tree); // need to add thing
         }catch (IOException e) {
             System.out.println("Not Accepted");
         }catch(IllegalArgumentException e){
