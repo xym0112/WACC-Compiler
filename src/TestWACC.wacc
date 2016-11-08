@@ -6,12 +6,12 @@
 # Program:
 
 begin
-  int f() is
-    return 0
+  char f() is
+    return 'c'
   end
   int f() is
-     return 4
+    return 878
   end
-  int x = call f() ;
+  char x = call f() ;
   println x
 end

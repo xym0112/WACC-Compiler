@@ -95,6 +95,8 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         }
     }
 
+
+
     @Override
     public WACC_Type visitRETURN(@NotNull RETURNContext ctx) {
         return visit(ctx.expr());
