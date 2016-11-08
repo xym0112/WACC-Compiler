@@ -1,9 +1,6 @@
 package WACCSemantics.types;
 
 import WACCSemantics.SymbolTable;
-import sun.jvm.hotspot.debugger.cdbg.Sym;
-
-import java.util.ArrayList;
 
 public class WACC_Function {
     private WACC_Type returnType;

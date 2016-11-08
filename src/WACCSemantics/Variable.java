@@ -11,6 +11,11 @@ public class Variable {
         this.declared = false;
     }
 
+    public Variable(WACC_Type type, boolean declared) {
+        this.type = type;
+        this.declared = declared;
+    }
+
     public WACC_Type getType() {
         return type;
     }

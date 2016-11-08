@@ -2,13 +2,12 @@ package WACCSemantics;
 
 
 import WACCSemantics.types.WACC_Function;
-import WACCSemantics.types.WACC_Type;
 
 import java.util.HashMap;
 
 public class SymbolTable {
     private SymbolTable encSymTable;
-    private HashMap<String, WACC_Type> variableDictionary;
+    private HashMap<String, Variable> variableDictionary;
     private HashMap<String, WACC_Function> functionDictionary;
 
     public SymbolTable(SymbolTable symbolTable) {
@@ -27,19 +26,19 @@ public class SymbolTable {
     public SymbolTable getEncSymTable() {
         return encSymTable;
     }
-
-    public WACC_Type addVar(String varId, WACC_Type var) {
+    
+    public Variable addVar(String varId, Variable var) {
         return variableDictionary.put(varId,var);
     }
 
-    public WACC_Type lookupVar(String varId) {
+    public Variable lookupVar(String varId) {
         return variableDictionary.get(varId);
     }
 
-    public WACC_Type lookUpAllVar(String varId) {
+    public Variable lookUpAllVar(String varId) {
 
         SymbolTable self = this;
-        WACC_Type var = null;
+        Variable var = null;
 
         while (self != null) {
             var = lookupVar(varId);
