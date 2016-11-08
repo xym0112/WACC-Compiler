@@ -25,4 +25,9 @@ public class WACC_Function {
     public WACC_Type getReturnType() {
         return returnType;
     }
+
+    @Override
+    public String toString() {
+        return returnType.toString();
+    }
 }
