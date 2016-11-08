@@ -1,6 +1,9 @@
 package WACCSemantics;
 
-import WACCSemantics.types.*;
+import WACCSemantics.types.BaseType;
+import WACCSemantics.types.WACC_BaseType;
+import WACCSemantics.types.WACC_Function;
+import WACCSemantics.types.WACC_Type;
 import antlr.WACCParser;
 import antlr.WACCParser.*;
 import antlr.WACCParserBaseVisitor;
@@ -75,12 +78,99 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
         WACC_Type paramType = visit(ctx.type());
         String paramName = ctx.Ident().getText();
-        Variable param = new Variable(paramType, true);
+        Variable param = new Variable(paramType, false);
         currentST.addVar(paramName, param);
 
         return paramType;
     }
 
+
+
+    //stats
+
+    @Override
+    public WACC_Type visitRETURN(@NotNull RETURNContext ctx) {
+        return visit(ctx.expr());
+    }
+
+    @Override
+    public WACC_Type visitCREATEVAR(@NotNull CREATEVARContext ctx) {
+
+        WACC_Type  varType = visit(ctx.type());
+        WACC_Type varValue = visit(ctx.assignRhs());
+        String varName = ctx.Ident().getText();
+        Variable variable = new Variable(varType);
+
+        //TODO TESTING FOR DIFFERENT TYPES;
+
+        // check if we already declared the variable
+        if ((currentST.lookUpAllVar(varName) != null)
+            && (currentST.lookUpAllVar(varName).isDeclared())) {
+            semanticError("Variable " + varName + " is assigned to an already declared variable",
+                    ctx.Ident().getSymbol().getLine(),
+                    ctx.Ident().getSymbol().getCharPositionInLine());
+        }
+
+        // case if we added a nondeclared variable in symbolTable - This shouldnt happen ever.
+        if (currentST.lookUpAllVar(varName) != null) {
+            semanticError("Non declared variable " + varName + " found in Symbol Table.",
+                    ctx.Ident().getSymbol().getLine(),
+                    ctx.Ident().getSymbol().getCharPositionInLine());
+        }
+
+        // check if the var's types conflict with the lhs
+        if (!varType.checkType(varValue)){
+            semanticError("Variable " + varName + " is assigned to a value of different type",
+                ctx.Ident().getSymbol().getLine(),
+                ctx.Ident().getSymbol().getCharPositionInLine());
+        }
+
+        variable.setDeclared(true);
+        currentST.addVar(varName, variable);
+        return null;
+    }
+
+    @Override
+    public WACC_Type visitASSIGNVAR(@NotNull ASSIGNVARContext ctx) {
+        return super.visitASSIGNVAR(ctx);
+    }
+
+    @Override
+    public WACC_Type visitBEGIN(@NotNull BEGINContext ctx) {
+        // Create a new symbol table with the current one as its parent
+        currentST = new SymbolTable(currentST);
+
+        //TODO:Test var scopes once we have them
+        WACC_Type statType = visit(ctx.stat());
+
+        // Make current symbol table the previous ones parent
+        currentST = currentST.getEncSymTable();
+
+        return statType;
+    }
+
+    @Override
+    public WACC_Type visitSEQUENCE(@NotNull SEQUENCEContext ctx) {
+        WACC_Type fststat = visit(ctx.stat(0));
+        WACC_Type sndstat = visit(ctx.stat(1));
+        if ((fststat == null)) {
+            return sndstat;
+        } else {
+            // if sndstat isnt null, then our syntax checker is wrong, so its fine to assume that sndstat is null
+            assert(sndstat == null);
+            return fststat;
+        }
+
+    }
+    //assignRhs
+
+    @Override
+    public WACC_Type visitRHSEXPR(@NotNull RHSEXPRContext ctx) {
+        return visit(ctx.expr());
+    }
+
+
+    //type
 
     @Override
     public WACC_Type visitTYPEBASE(@NotNull TYPEBASEContext ctx) {
@@ -95,31 +185,14 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         }
     }
 
-    @Override
-    public WACC_Type visitRETURN(@NotNull RETURNContext ctx) {
-        return visit(ctx.expr());
-    }
-
-    @Override
-    public WACC_Type visitBEGIN(@NotNull BEGINContext ctx) {
-        // Create a new symbol table with the current one as its parent
-        currentST = new SymbolTable(currentST);
-
-        //TODO:Test vars once we have them
-        WACC_Type statType = visit(ctx.stat());
-
-        // Make current symbol table the previous ones parent
-        currentST = currentST.getEncSymTable();
-
-        return statType;
-    }
-
     // Expressions
+
 
     @Override
     public WACC_Type visitUNSIGNED(@NotNull UNSIGNEDContext ctx) {
         return new WACC_BaseType(BaseType.INT);
     }
+
 
     @Override
     public WACC_Type visitBOOLLITER(@NotNull BOOLLITERContext ctx) {
@@ -143,6 +216,10 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitEXPRIDENT(@NotNull EXPRIDENTContext ctx) {
+        if (currentST.lookUpAllVar(ctx.Ident().getText()) == null) {
+            semanticError(ctx.Ident().getText() + " Identifier doesn't exist", ctx.Ident().getSymbol().getLine(),
+                    ctx.Ident().getSymbol().getCharPositionInLine());
+        }
         return currentST.lookUpAllVar(ctx.Ident().getText()).getType();
     }
 
