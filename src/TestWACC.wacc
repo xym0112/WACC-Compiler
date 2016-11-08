@@ -6,12 +6,12 @@
 # Program:
 
 begin
-  char f() is
+  char fili() is
     return 'c'
   end
   int f() is
     return 878
   end
-  char x = call f() ;
+   int i = 3 * 2;
   println x
 end

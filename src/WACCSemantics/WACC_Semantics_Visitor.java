@@ -144,4 +144,37 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
         System.exit(200);
     }
+
+    // remove extra labels in binary
+    @Override
+    public WACC_Type visitBINARYOP(@NotNull BINARYOPContext ctx) {
+        String operation = ctx.binaryOper().getText();
+        WACC_Type expr1 = visit(ctx.expr(0));
+        WACC_Type expr2 = visit(ctx.expr(1));
+
+        if (operation.equals("*") || operation.equals("/") || operation.equals("+")
+                || operation.equals("-") || operation.equals("%")){
+
+            if (!expr1.checkType(new WACC_BaseType(BaseType.INT)) ||
+                    !expr2.checkType(new WACC_BaseType(BaseType.INT))) {
+                semanticError("this binary can only be operated to Integer ", ctx.binaryOper().getStart().getLine()
+                        , ctx.binaryOper().getStart().getCharPositionInLine());
+            } else {
+                return new WACC_BaseType(BaseType.INT);
+            }
+        }
+        else {
+
+            if (!expr1.checkType(visit(ctx.expr(1))) || !expr1.checkType(new WACC_BaseType(BaseType.INT))
+                    || !expr1.checkType(new WACC_BaseType(BaseType.BOOL)) ||
+                    !expr1.checkType(new WACC_BaseType(BaseType.STRING))){
+                semanticError("this binary can only be operated to given type ", ctx.binaryOper().getStart().getLine()
+                        , ctx.binaryOper().getStart().getCharPositionInLine());
+            }   else {
+                return new WACC_BaseType(BaseType.BOOL);
+            }
+        }
+        return visit(ctx.expr(0));
+    }
+
 }
