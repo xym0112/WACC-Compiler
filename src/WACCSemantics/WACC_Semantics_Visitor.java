@@ -95,8 +95,6 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         }
     }
 
-
-
     @Override
     public WACC_Type visitRETURN(@NotNull RETURNContext ctx) {
         return visit(ctx.expr());
@@ -115,6 +113,8 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
         return statType;
     }
+
+    // Expressions
 
     @Override
     public WACC_Type visitUNSIGNED(@NotNull UNSIGNEDContext ctx) {
@@ -136,9 +136,56 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         return new WACC_BaseType(BaseType.STRING);
     }
 
+    @Override
+    public WACC_Type visitPAIRLITER(@NotNull PAIRLITERContext ctx) {
+        return new WACC_BaseType(BaseType.NULL);
+    }
+
+    @Override
+    public WACC_Type visitEXPRIDENT(@NotNull EXPRIDENTContext ctx) {
+        return currentST.lookUpAllVar(ctx.Ident().getText()).getType();
+    }
+
+    @Override
+    public WACC_Type visitUNARYOP(@NotNull UNARYOPContext ctx) {
+        WACC_Type expr = visit(ctx.expr());
+        String operation = ctx.unaryOper().getText();
+
+        if (operation.equals("!")
+                && !expr.checkType(new WACC_BaseType(BaseType.BOOL))) {
+
+            unaryOperationError(operation, ctx, expr.toString());
+        } else if (!expr.checkType(new WACC_BaseType(BaseType.INT))
+                && (operation.equals("+") || operation.equals("-")
+                || operation.equals("len") || operation.equals("chr"))) {
+
+            unaryOperationError(operation, ctx, expr.toString());
+        } else if (!expr.checkType(new WACC_BaseType(BaseType.CHAR))
+                && operation.equals("ord")) {
+
+            unaryOperationError(operation, ctx, expr.toString());
+        }
+
+        if (operation.equals("len") || operation.equals("ord")) return new WACC_BaseType(BaseType.INT);
+        if (operation.equals("ord")) return new WACC_BaseType(BaseType.CHAR);
+
+        return expr;
+    }
+
+    @Override
+    public WACC_Type visitBRACKETEXPR(@NotNull BRACKETEXPRContext ctx) {
+        return visit(ctx.expr());
+    }
+
+    private void unaryOperationError(String operation, UNARYOPContext ctx, String type) {
+        semanticError(operation + " unary operation can not be applied to " + type,
+                ctx.unaryOper().getStop().getLine(),
+                ctx.unaryOper().getStop().getCharPositionInLine());
+    }
+
     // Print Semantic Error helper method
     private void semanticError(String msg, int line, int pos) {
-        System.out.println("Semantic Error: " + msg
+        System.err.println("Semantic Error: " + msg
                         + " at line " + line
                         + " and position " + pos);
 

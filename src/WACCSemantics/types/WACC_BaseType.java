@@ -24,9 +24,7 @@ public class WACC_BaseType implements WACC_Type {
 
     @Override
     public String toString() {
-        return "WACC_BaseType{" +
-                "type=" + type +
-                '}';
+        return type.toString();
     }
 
 

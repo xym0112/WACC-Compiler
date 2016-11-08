@@ -18,4 +18,9 @@ public class WACC_ArrayType implements WACC_Type {
         WACC_ArrayType identArrayType = (WACC_ArrayType) ident;
         return identArrayType.getType().checkType(this.type);
     }
+
+    @Override
+    public String toString() {
+        return type + "[]";
+    }
 }

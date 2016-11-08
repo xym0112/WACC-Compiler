@@ -6,7 +6,7 @@
 # Program:
 
 begin
-  char fili() is
+char fili() is
     return 'c'
   end
   int f() is

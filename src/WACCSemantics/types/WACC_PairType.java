@@ -25,4 +25,9 @@ public class WACC_PairType implements WACC_Type {
         return identPairType.getFirst().checkType(this.first)
                 && identPairType.getSecond().checkType(this.second);
     }
+
+    @Override
+    public String toString() {
+        return "(" + first + ", " + second + ")";
+    }
 }
