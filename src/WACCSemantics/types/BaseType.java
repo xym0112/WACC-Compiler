@@ -4,5 +4,6 @@ public enum BaseType {
     INT,
     CHAR,
     BOOL,
-    STRING
+    STRING,
+    NULL
 }

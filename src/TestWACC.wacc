@@ -6,12 +6,5 @@
 # Program:
 
 begin
-  int f() is
-    return 0
-  end
-  int f() is
-     return 4
-  end
-  int x = call f() ;
-  println x
+  int a = -1
 end

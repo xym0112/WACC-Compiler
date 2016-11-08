@@ -1,7 +1,9 @@
 package WACCSemantics;
 
-import WACCSemantics.types.*;
-import antlr.WACCParser;
+import WACCSemantics.types.BaseType;
+import WACCSemantics.types.WACC_BaseType;
+import WACCSemantics.types.WACC_Function;
+import WACCSemantics.types.WACC_Type;
 import antlr.WACCParser.*;
 import antlr.WACCParserBaseVisitor;
 import org.antlr.v4.runtime.misc.NotNull;
@@ -50,15 +52,16 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
             }
         }
 
+        // set current symbol table to parent
+        WACC_Type statRetType = visit(ctx.stat());
+
+        currentST = currentST.getEncSymTable();
+
         if (!funcParams.isEmpty()) {
             currentST.addFunc(funcName, new WACC_Function(funcRetType, funcParams, currentST));
         } else {
             currentST.addFunc(funcName, new WACC_Function(funcRetType, currentST));
         }
-
-        // set current symbol table to parent
-        WACC_Type statRetType = visit(ctx.stat());
-        currentST = currentST.getEncSymTable();
 
         if(!funcRetType.checkType(statRetType)) {
             semanticError("Function " + funcName + " has conflicting return types",
@@ -152,10 +155,78 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
     }
 
 
+    // Expressions
+
 
     @Override
     public WACC_Type visitUNSIGNED(@NotNull UNSIGNEDContext ctx) {
         return new WACC_BaseType(BaseType.INT);
+    }
+
+    @Override
+    public WACC_Type visitBOOLLITER(@NotNull BOOLLITERContext ctx) {
+        return new WACC_BaseType(BaseType.BOOL);
+    }
+
+    @Override
+    public WACC_Type visitCHARLITER(@NotNull CHARLITERContext ctx) {
+        return new WACC_BaseType(BaseType.CHAR);
+    }
+
+    @Override
+    public WACC_Type visitSTRLITER(@NotNull STRLITERContext ctx) {
+        return new WACC_BaseType(BaseType.STRING);
+    }
+
+    @Override
+    public WACC_Type visitPAIRLITER(@NotNull PAIRLITERContext ctx) {
+        return new WACC_BaseType(BaseType.NULL);
+    }
+
+    @Override
+    public WACC_Type visitEXPRIDENT(@NotNull EXPRIDENTContext ctx) {
+        return currentST.lookUpAllVar(ctx.Ident().getText()).getType();
+    }
+
+    @Override
+    public WACC_Type visitUNARYOP(@NotNull UNARYOPContext ctx) {
+        WACC_Type expr = visit(ctx.expr());
+        String operation = ctx.unaryOper().getText();
+
+        if (operation.equals("!")
+                && !expr.checkType(new WACC_BaseType(BaseType.BOOL))) {
+            unaryOperationError(operation, ctx);
+        } else if (!expr.checkType(new WACC_BaseType(BaseType.INT))
+                && (operation.equals("+") || operation.equals("-")
+                || operation.equals("len") || operation.equals("chr"))) {
+            unaryOperationError(operation, ctx);
+        } else if (!expr.checkType(new WACC_BaseType(BaseType.CHAR))
+                && operation.equals("ord")) {
+            unaryOperationError(operation, ctx);
+        }
+
+        return visit(ctx.unaryOper());
+    }
+
+    @Override
+    public WACC_Type visitUNOPLEN(@NotNull UNOPLENContext ctx) {
+        return new WACC_BaseType(BaseType.INT);
+    }
+
+    @Override
+    public WACC_Type visitUNOPORD(@NotNull UNOPORDContext ctx) {
+        return new WACC_BaseType(BaseType.CHAR);
+    }
+
+    @Override
+    public WACC_Type visitUNOPCHR(@NotNull UNOPCHRContext ctx) {
+        return super.visitUNOPCHR(ctx);
+    }
+
+    private void unaryOperationError(String operation, UNARYOPContext ctx) {
+        semanticError(operation + " unary operation can only be applied to bool",
+                ctx.unaryOper().getStop().getLine(),
+                ctx.unaryOper().getStop().getCharPositionInLine());
     }
 
     // Print Semantic Error helper method
