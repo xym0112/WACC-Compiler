@@ -6,5 +6,5 @@
 # Program:
 
 begin
-  int a = -1
+  int a = -'a'
 end

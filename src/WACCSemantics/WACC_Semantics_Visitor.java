@@ -195,43 +195,39 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
         if (operation.equals("!")
                 && !expr.checkType(new WACC_BaseType(BaseType.BOOL))) {
-            unaryOperationError(operation, ctx);
+
+            unaryOperationError(operation, ctx, expr.toString());
         } else if (!expr.checkType(new WACC_BaseType(BaseType.INT))
                 && (operation.equals("+") || operation.equals("-")
                 || operation.equals("len") || operation.equals("chr"))) {
-            unaryOperationError(operation, ctx);
+
+            unaryOperationError(operation, ctx, expr.toString());
         } else if (!expr.checkType(new WACC_BaseType(BaseType.CHAR))
                 && operation.equals("ord")) {
-            unaryOperationError(operation, ctx);
+
+            unaryOperationError(operation, ctx, expr.toString());
         }
 
-        return visit(ctx.unaryOper());
+        if (operation.equals("len") || operation.equals("ord")) return new WACC_BaseType(BaseType.INT);
+        if (operation.equals("ord")) return new WACC_BaseType(BaseType.CHAR);
+
+        return expr;
     }
 
     @Override
-    public WACC_Type visitUNOPLEN(@NotNull UNOPLENContext ctx) {
-        return new WACC_BaseType(BaseType.INT);
+    public WACC_Type visitBRACKETEXPR(@NotNull BRACKETEXPRContext ctx) {
+        return visit(ctx.expr());
     }
 
-    @Override
-    public WACC_Type visitUNOPORD(@NotNull UNOPORDContext ctx) {
-        return new WACC_BaseType(BaseType.CHAR);
-    }
-
-    @Override
-    public WACC_Type visitUNOPCHR(@NotNull UNOPCHRContext ctx) {
-        return super.visitUNOPCHR(ctx);
-    }
-
-    private void unaryOperationError(String operation, UNARYOPContext ctx) {
-        semanticError(operation + " unary operation can only be applied to bool",
+    private void unaryOperationError(String operation, UNARYOPContext ctx, String type) {
+        semanticError(operation + " unary operation can not be applied to " + type,
                 ctx.unaryOper().getStop().getLine(),
                 ctx.unaryOper().getStop().getCharPositionInLine());
     }
 
     // Print Semantic Error helper method
     private void semanticError(String msg, int line, int pos) {
-        System.out.println("Semantic Error: " + msg
+        System.err.println("Semantic Error: " + msg
                         + " at line " + line
                         + " and position " + pos);
 
