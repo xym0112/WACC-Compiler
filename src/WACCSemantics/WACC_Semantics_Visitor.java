@@ -4,6 +4,7 @@ import WACCSemantics.types.BaseType;
 import WACCSemantics.types.WACC_BaseType;
 import WACCSemantics.types.WACC_Function;
 import WACCSemantics.types.WACC_Type;
+import antlr.WACCParser;
 import antlr.WACCParser.*;
 import antlr.WACCParserBaseVisitor;
 import org.antlr.v4.runtime.misc.NotNull;
@@ -84,18 +85,8 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
     }
 
 
-    @Override
-    public WACC_Type visitTYPEBASE(@NotNull TYPEBASEContext ctx) {
-        if (ctx.BaseType().toString().equals("char")) {
-            return new WACC_BaseType(BaseType.CHAR);
-        } else if (ctx.BaseType().toString().equals("int")) {
-            return new WACC_BaseType(BaseType.INT);
-        } else if (ctx.BaseType().toString().equals("bool")) {
-            return new WACC_BaseType(BaseType.BOOL);
-        } else {
-            return new WACC_BaseType(BaseType.STRING);
-        }
-    }
+
+    //stats
 
     @Override
     public WACC_Type visitRETURN(@NotNull RETURNContext ctx) {
@@ -139,6 +130,10 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         return null;
     }
 
+    @Override
+    public WACC_Type visitASSIGNVAR(@NotNull ASSIGNVARContext ctx) {
+        return super.visitASSIGNVAR(ctx);
+    }
 
     @Override
     public WACC_Type visitBEGIN(@NotNull BEGINContext ctx) {
@@ -154,6 +149,41 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         return statType;
     }
 
+    @Override
+    public WACC_Type visitSEQUENCE(@NotNull SEQUENCEContext ctx) {
+        WACC_Type fststat = visit(ctx.stat(0));
+        WACC_Type sndstat = visit(ctx.stat(1));
+        if ((fststat == null)) {
+            return sndstat;
+        } else {
+            // if sndstat isnt null, then our syntax checker is wrong, so its fine to assume that sndstat is null
+            assert(sndstat == null);
+            return fststat;
+        }
+
+    }
+    //assignRhs
+
+    @Override
+    public WACC_Type visitRHSEXPR(@NotNull RHSEXPRContext ctx) {
+        return visit(ctx.expr());
+    }
+
+
+    //type
+
+    @Override
+    public WACC_Type visitTYPEBASE(@NotNull TYPEBASEContext ctx) {
+        if (ctx.BaseType().toString().equals("char")) {
+            return new WACC_BaseType(BaseType.CHAR);
+        } else if (ctx.BaseType().toString().equals("int")) {
+            return new WACC_BaseType(BaseType.INT);
+        } else if (ctx.BaseType().toString().equals("bool")) {
+            return new WACC_BaseType(BaseType.BOOL);
+        } else {
+            return new WACC_BaseType(BaseType.STRING);
+        }
+    }
 
     // Expressions
 
@@ -162,6 +192,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
     public WACC_Type visitUNSIGNED(@NotNull UNSIGNEDContext ctx) {
         return new WACC_BaseType(BaseType.INT);
     }
+
 
     @Override
     public WACC_Type visitBOOLLITER(@NotNull BOOLLITERContext ctx) {
@@ -185,6 +216,10 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitEXPRIDENT(@NotNull EXPRIDENTContext ctx) {
+        if (currentST.lookUpAllVar(ctx.Ident().getText()) == null) {
+            semanticError(ctx.Ident().getText() + " Identifier doesn't exist", ctx.Ident().getSymbol().getLine(),
+                    ctx.Ident().getSymbol().getCharPositionInLine());
+        }
         return currentST.lookUpAllVar(ctx.Ident().getText()).getType();
     }
 
