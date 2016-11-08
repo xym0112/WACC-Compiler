@@ -10,3 +10,6 @@ antlr/WACCLexer.tokens
 src/antlr/
 
 wacc_40.iml
+
+#Short term testing file
+src/TestWACC.wacc
