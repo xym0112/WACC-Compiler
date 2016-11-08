@@ -12,7 +12,7 @@ public class Demo {
     public static void main(String[] args) throws Exception {
 
         try {
-            ANTLRInputStream input = new ANTLRInputStream(new FileInputStream("valid/function/simple_functions/functionSimple.wacc"));
+            ANTLRInputStream input = new ANTLRInputStream(new FileInputStream("valid/function/simple_functions/functionManyArguments.wacc"));
             WACCLexer lexer  = new WACCLexer(input);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             WACCParser parser = new WACCParser(tokens);

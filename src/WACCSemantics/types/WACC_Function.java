@@ -1,18 +1,25 @@
 package WACCSemantics.types;
 
 import WACCSemantics.SymbolTable;
+import sun.jvm.hotspot.debugger.cdbg.Sym;
 
 import java.util.ArrayList;
 
 public class WACC_Function {
     private WACC_Type returnType;
-    private ArrayList<WACC_Type> parameters;
+    private WACC_Parameters parameters;
     private SymbolTable symbolTable;
 
-    public WACC_Function(WACC_Type returnType, WACC_Type[] parameters, SymbolTable parent) {
+    public WACC_Function(WACC_Type returnType, WACC_Parameters parameters, SymbolTable parent) {
         this.returnType = returnType;
-        this.parameters = new ArrayList<WACC_Type>();
+        this.parameters = parameters;
         this.symbolTable = new SymbolTable(parent);
+    }
+
+    public WACC_Function(WACC_Type returnType, SymbolTable parent) {
+        this.symbolTable = new SymbolTable(parent);
+        this.parameters = new WACC_Parameters();
+        this.returnType = returnType;
     }
 
     public WACC_Type getReturnType() {
