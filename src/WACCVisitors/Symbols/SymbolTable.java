@@ -5,7 +5,7 @@ import java.util.HashMap;
 
 public class SymbolTable {
     private SymbolTable encSymTable;
-    private HashMap<String, WACC_Type> dictionary;
+    private HashMap<String, WACC_Identifier> dictionary;
 
     public SymbolTable(SymbolTable symbolTable) {
         dictionary = new HashMap();
@@ -22,18 +22,18 @@ public class SymbolTable {
         return encSymTable;
     }
 
-    public WACC_Type add(String varId, WACC_Type var) {
+    public WACC_Identifier add(String varId, WACC_Identifier var) {
         return dictionary.put(varId,var);
     }
 
-    public WACC_Type lookup(String varId) {
+    public WACC_Identifier lookup(String varId) {
         return dictionary.get(varId);
     }
 
-    public WACC_Type lookUpAll(String varId) {
+    public WACC_Identifier lookUpAll(String varId) {
 
         SymbolTable self = this;
-        WACC_Type var = null;
+        WACC_Identifier var = null;
 
         while (self != null) {
             var = lookup(varId);

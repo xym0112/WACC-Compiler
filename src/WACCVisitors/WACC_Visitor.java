@@ -4,12 +4,15 @@ import WACCVisitors.Symbols.SymbolTable;
 import WACCVisitors.Symbols.*;
 import antlr.WACCParser;
 import antlr.WACCParserBaseVisitor;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.jetbrains.annotations.NotNull;
 
 
 public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     SymbolTable ctxsymbolTable;
+
+
 
     public WACC_Visitor() {
         ctxsymbolTable = new SymbolTable();
@@ -22,7 +25,8 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitPRINT(@NotNull WACCParser.PRINTContext ctx) {
-        return super.visitPRINT(ctx);
+        super.visitPRINT(ctx);
+        return null;
     }
 
     @Override
@@ -32,24 +36,28 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitArrayLiter(@NotNull WACCParser.ArrayLiterContext ctx) {
-        return null;
+        if (ctx.COMMA(0) != null) {
+            return new WACC_Array(visit(ctx.expr(0)));
+        }else {
+            return null;
+        }
         //TODO
-        //notnoreturn new WACC_Array();
     }
 
     @Override
     public WACC_Type visitRHSCALLFUNC(@NotNull WACCParser.RHSCALLFUNCContext ctx) {
-        return super.visitRHSCALLFUNC(ctx);
+        return ((WACC_Function) ctxsymbolTable.lookUpAll(ctx.Ident().getText())).getReturnType();
     }
 
     @Override
     public WACC_Type visitBIOPOR(@NotNull WACCParser.BIOPORContext ctx) {
-        return super.visitBIOPOR(ctx);
+        return checkBinOpBool(ctx.OR());
     }
 
     @Override
     public WACC_Type visitArrayElem(@NotNull WACCParser.ArrayElemContext ctx) {
-        return super.visitArrayElem(ctx);
+        // pre ctx is in array
+        return ((WACC_Array)ctxsymbolTable.lookUpAll(ctx.Ident().getText())).getElementType();
     }
 
     @Override
@@ -64,24 +72,22 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitUNOPADD(@NotNull WACCParser.UNOPADDContext ctx) {
-        return super.visitUNOPADD(ctx);
+        if((visit(ctx.getChild(0))) instanceof WACC_Int){
+            return new WACC_Int();
+        } else {
+            System.out.println("Semantic Error");
+            return null;
+        }
     }
 
     @Override
     public WACC_Type visitBIOPGE(@NotNull WACCParser.BIOPGEContext ctx) {
-        return super.visitBIOPGE(ctx);
+        return checkBinOpInEqSigns(ctx.GE());
     }
 
     @Override
     public WACC_Type visitBIOPMOD(@NotNull WACCParser.BIOPMODContext ctx) {
-        WACC_Type lhsType = visit(ctx.MOD().getChild(0));
-        WACC_Type rhsType = visit(ctx.MOD().getChild(1));
-        if ((lhsType instanceof WACC_Int) && (rhsType instanceof WACC_Int)){
-
-        } else {
-//ERROR
-        }
-        return super.visitBIOPMOD(ctx);
+        return checkBinOpInt(ctx.MOD());
     }
 
     @Override
@@ -91,12 +97,17 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitTYPEARRAY(@NotNull WACCParser.TYPEARRAYContext ctx) {
-        return super.visitTYPEARRAY(ctx);
+        return new WACC_Array(visit(ctx.type()));
     }
 
     @Override
     public WACC_Type visitUNOPCHR(@NotNull WACCParser.UNOPCHRContext ctx) {
-        return super.visitUNOPCHR(ctx);
+        if((visit(ctx.getChild(0)) instanceof WACC_Char)){
+            return new WACC_Int();
+        } else {
+            System.out.println("Semantic Error");
+            return null;
+        }
     }
 
     @Override
@@ -106,28 +117,38 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitBIOPGT(@NotNull WACCParser.BIOPGTContext ctx) {
-        return super.visitBIOPGT(ctx);
+        return checkBinOpInEqSigns(ctx.GT());
     }
 
+    //TODO
     @Override
     public WACC_Type visitASSIGNVAR(@NotNull WACCParser.ASSIGNVARContext ctx) {
-        return super.visitASSIGNVAR(ctx);
+        String lhsText = ctx.assignLhs().getText();
+        visit(ctx.assignRhs());
+        WACC_Type rhs = visit(ctx.assignRhs());
+        ctxsymbolTable.add(lhsText,rhs);
+        return null;
     }
 
     @Override
     public WACC_Type visitIF(@NotNull WACCParser.IFContext ctx) {
-        return super.visitIF(ctx);
+        if((visit(ctx.getChild(1)) instanceof WACC_Bool) && (visit(ctx.getChild(2)) instanceof WACC_Bool)) {
+            return new WACC_Bool();
+        } else {
+            System.out.println("Semantics error:");
+            return null;
+        }
     }
 
     @Override
     public WACC_Type visitBIOPAND(@NotNull WACCParser.BIOPANDContext ctx) {
-        return super.visitBIOPAND(ctx);
+        return checkBinOpBool(ctx.AND());
     }
 
     @Override
     public WACC_Type visitEXPRIDENT(@NotNull WACCParser.EXPRIDENTContext ctx) {
         String name = ctx.Ident().getText();
-        return ctxsymbolTable.lookUpAll(name);
+        return (WACC_Type)ctxsymbolTable.lookUpAll(name);
     }
 
     @Override
@@ -137,7 +158,7 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitBIOPLE(@NotNull WACCParser.BIOPLEContext ctx) {
-        return super.visitBIOPLE(ctx);
+        return checkBinOpInEqSigns(ctx.LE());
     }
 
     @Override
@@ -147,17 +168,23 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitUNOPSUB(@NotNull WACCParser.UNOPSUBContext ctx) {
-        return super.visitUNOPSUB(ctx);
+        if((visit(ctx.getChild(0)) instanceof WACC_Int)){
+            return new WACC_Int();
+        } else {
+            System.out.println("Semantic Error");
+            return null;
+        }
     }
 
     @Override
     public WACC_Type visitREAD(@NotNull WACCParser.READContext ctx) {
-        return super.visitREAD(ctx);
+        return null;
     }
 
     @Override
     public WACC_Type visitParamList(@NotNull WACCParser.ParamListContext ctx) {
-        return super.visitParamList(ctx);
+        super.visitParamList(ctx);
+        return null;
     }
 
     @Override
@@ -167,7 +194,8 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitLHSIDENT(@NotNull WACCParser.LHSIDENTContext ctx) {
-        return super.visitLHSIDENT(ctx);
+        super.visitLHSIDENT(ctx);
+        return null;
     }
 
     @Override
@@ -177,16 +205,19 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitBIOPLT(@NotNull WACCParser.BIOPLTContext ctx) {
-        return super.visitBIOPLT(ctx);
+        return checkBinOpInEqSigns(ctx.LT());
     }
 
     @Override
     public WACC_Type visitEXIT(@NotNull WACCParser.EXITContext ctx) {
-        return super.visitEXIT(ctx);
+
+        super.visitEXIT(ctx);
+        return null;
     }
 
     @Override
     public WACC_Type visitPAIRLITER(@NotNull WACCParser.PAIRLITERContext ctx) {
+        super.visitPAIRLITER(ctx);
         return null;
     }
 
@@ -207,17 +238,21 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitSKIPSTAT(@NotNull WACCParser.SKIPSTATContext ctx) {
-        return super.visitSKIPSTAT(ctx);
+        super.visitSKIPSTAT(ctx);
+        return null;
     }
 
     @Override
     public WACC_Type visitPRINTLN(@NotNull WACCParser.PRINTLNContext ctx) {
-        return super.visitPRINTLN(ctx);
+        super.visitPRINTLN(ctx);
+        return null;
     }
 
     @Override
     public WACC_Type visitRHSNEWPAIR(@NotNull WACCParser.RHSNEWPAIRContext ctx) {
-        return super.visitRHSNEWPAIR(ctx);
+        WACC_Type rhsType = visit(ctx.expr(0));
+        WACC_Type lhsType = visit(ctx.expr(1));
+        return new WACC_Pair(rhsType, lhsType);
     }
 
     @Override
@@ -227,47 +262,71 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitUNOPEXCLAMATION(@NotNull WACCParser.UNOPEXCLAMATIONContext ctx) {
-        return super.visitUNOPEXCLAMATION(ctx);
+        if((visit(ctx.getChild(0)) instanceof WACC_Bool)){
+            return new WACC_Bool();
+        } else {
+            System.out.println("Semantic Error");
+            return null;
+
+        }
     }
 
     @Override
     public WACC_Type visitCREATEVAR(@NotNull WACCParser.CREATEVARContext ctx) {
-        return super.visitCREATEVAR(ctx);
+        WACC_Type rhs = visit(ctx.assignRhs());
+        if (visit(ctx.type()).getClass().equals(rhs)) {
+            ctxsymbolTable.add(ctx.Ident().getText(), rhs);
+        }
+        return null;
     }
 
     @Override
     public WACC_Type visitBEGIN(@NotNull WACCParser.BEGINContext ctx) {
-        return super.visitBEGIN(ctx);
+
+        //TODO CHANGE CONTEXT
+        ctxsymbolTable = new SymbolTable(ctxsymbolTable);
+        super.visitBEGIN(ctx);
+        ctxsymbolTable = ctxsymbolTable.getEncSymTable();
+        return null;
     }
 
     @Override
     public WACC_Type visitFREE(@NotNull WACCParser.FREEContext ctx) {
-        return super.visitFREE(ctx);
+        super.visitFREE(ctx);
+        return null;
     }
 
     @Override
     public WACC_Type visitUNOPORD(@NotNull WACCParser.UNOPORDContext ctx) {
-        return super.visitUNOPORD(ctx);
+        if((visit(ctx.getChild(0)) instanceof WACC_Char)){
+            return new WACC_Int();
+        } else {
+            System.out.println("Semantic Error");
+            return null;
+        }
     }
 
     @Override
     public WACC_Type visitRETURN(@NotNull WACCParser.RETURNContext ctx) {
-        return super.visitRETURN(ctx);
+        super.visitRETURN(ctx);
+        return null;
     }
 
     @Override
     public WACC_Type visitBIOPSUB(@NotNull WACCParser.BIOPSUBContext ctx) {
-        return super.visitBIOPSUB(ctx);
+        return checkBinOpInt(ctx.SUB());
     }
 
     @Override
     public WACC_Type visitParam(@NotNull WACCParser.ParamContext ctx) {
-        return super.visitParam(ctx);
+        ctxsymbolTable.add(ctx.Ident().getText(), visit(ctx.type()));
     }
 
     @Override
     public WACC_Type visitSEQUENCE(@NotNull WACCParser.SEQUENCEContext ctx) {
-        return super.visitSEQUENCE(ctx);
+
+        super.visitSEQUENCE(ctx);
+        return null;
     }
 
     @Override
@@ -277,7 +336,7 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitBIOPMUL(@NotNull WACCParser.BIOPMULContext ctx) {
-        return super.visitBIOPMUL(ctx);
+        return checkBinOpInt(ctx.MUL());
     }
 
     @Override
@@ -287,12 +346,12 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitBIOPDIV(@NotNull WACCParser.BIOPDIVContext ctx) {
-        return super.visitBIOPDIV(ctx);
+        return checkBinOpInt(ctx.DIV())         ;
     }
 
     @Override
     public WACC_Type visitBIOPNQ(@NotNull WACCParser.BIOPNQContext ctx) {
-        return super.visitBIOPNQ(ctx);
+        return checkBinOpInEq(ctx.NOTEQUAL());
     }
 
     @Override
@@ -310,6 +369,7 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         return super.visitRHSPAIR(ctx);
     }
 
+    //TODO
     @Override
     public WACC_Type visitProg(@NotNull WACCParser.ProgContext ctx) {
         return super.visitProg(ctx);
@@ -317,7 +377,9 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitPairType(@NotNull WACCParser.PairTypeContext ctx) {
-        return super.visitPairType(ctx);
+        WACC_Type fstType = visit(ctx.pairElemType(0));
+        WACC_Type sndType = visit(ctx.pairElemType(1));
+        return new WACC_Pair(fstType, sndType);
     }
 
     @Override
@@ -327,19 +389,26 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitBIOPEQUAL(@NotNull WACCParser.BIOPEQUALContext ctx) {
-        return super.visitBIOPEQUAL(ctx);
+        return checkBinOpInEq(ctx.EQUAL());
     }
+
 
     @Override
     public WACC_Type visitUNOPLEN(@NotNull WACCParser.UNOPLENContext ctx) {
-        return super.visitUNOPLEN(ctx);
+        if((ctx.getChild(0) instanceof WACC_Array)){
+            return new WACC_Int();
+        } else {
+            System.out.println("Semantic Error");
+            return null;
+        }
     }
 
     @Override
     public WACC_Type visitBIOPADD(@NotNull WACCParser.BIOPADDContext ctx) {
-        return super.visitBIOPADD(ctx);
+        return checkBinOpInt(ctx.ADD());
     }
 
+    //TODO
     @Override
     public WACC_Type visitFunc(@NotNull WACCParser.FuncContext ctx) {
         return super.visitFunc(ctx);
@@ -347,7 +416,8 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitTYPEPAIR(@NotNull WACCParser.TYPEPAIRContext ctx) {
-        return super.visitTYPEPAIR(ctx);
+
+       return super.visitTYPEPAIR(ctx);
     }
 
     @Override
@@ -355,8 +425,87 @@ public class WACC_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         return super.visitUNARYOP(ctx);
     }
 
+    //TODO
     @Override
     public WACC_Type visitWHILE(@NotNull WACCParser.WHILEContext ctx) {
         return super.visitWHILE(ctx);
     }
+
+
+
+    private WACC_Type checkBinOpInt(TerminalNode BinNode) {
+        //PRE: can only be called on (int,int) binary operations
+        //String operType = BinNode.getSymbol().getText();
+        //System.out.println(operType);
+        WACC_Type lhsType = visit(BinNode.getChild(0));
+        WACC_Type rhsType = visit(BinNode.getChild(1));
+      /*  if (operType.equals("+")
+                || operType.equals("-")
+                || operType.equals("*")
+                || operType.equals("*")
+                || operType.equals("/")
+                || operType.equals("%")) */
+            if ((lhsType instanceof WACC_Int) && (rhsType instanceof WACC_Int)) {
+                return rhsType;
+            } else {
+                //TODO:ERROR
+                System.out.println("Semantics error: " + new WACC_Int().toString() + "expected," + lhsType.toString() + " and " + rhsType.toString() + "found.");
+                return new WACC_Int();
+            }
+
+    }
+
+    //TODO:DELET DIS
+    //DoooOOOOooplication!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    private WACC_Type checkBinOpBool(TerminalNode BinNode) {
+        //PRE: can only be called on (bool, bool) binary operations
+        WACC_Type lhsType = visit(BinNode.getChild(0));
+        WACC_Type rhsType = visit(BinNode.getChild(1));
+        if ((lhsType instanceof WACC_Bool) && (rhsType instanceof WACC_Bool)) {
+            return rhsType;
+        } else {
+            //TODO:ERROR
+            System.out.println("Semantics error: " + new WACC_Bool().toString() + "expected," + lhsType.toString() + " and " + rhsType.toString() + "found.");
+            return new WACC_Bool();
+        }
+
+    }
+
+
+    // Passing types or why c# is good and java is bad
+    //Triple Kill!!
+    private WACC_Type checkBinOpInEqSigns(TerminalNode BinNode) {
+        //PRE: can only be called on (int, int) or (char, char) binary operations
+        WACC_Type lhsType = visit(BinNode.getChild(0));
+        WACC_Type rhsType = visit(BinNode.getChild(1));
+        if (   ((lhsType instanceof WACC_Int) && (rhsType instanceof WACC_Int))
+            || ((lhsType instanceof WACC_Char) && (rhsType instanceof WACC_Char))) {
+            return new WACC_Bool();
+        } else {
+            //TODO:ERROR
+            System.out.println("Semantics error: " + new WACC_Bool().toString() + "expected," + lhsType.toString() + " and " + rhsType.toString() + "found.");
+            return new WACC_Bool();
+        }
+
+    }
+
+    //QUADRA KILL
+    private WACC_Type checkBinOpInEq(TerminalNode BinNode) {
+        //PRE: can only be called on (bool, bool) or (int, int) or (char, char) or (pair, pair) binary operations
+        WACC_Type lhsType = visit(BinNode.getChild(0));
+        WACC_Type rhsType = visit(BinNode.getChild(1));
+        if (   ((lhsType instanceof WACC_Int) && (rhsType instanceof WACC_Int))
+                || ((lhsType instanceof WACC_Char) && (rhsType instanceof WACC_Char))
+                || ((lhsType instanceof WACC_Bool) && (rhsType instanceof WACC_Bool))
+                || ((lhsType instanceof WACC_Pair) && (rhsType instanceof WACC_Pair))) {
+            return new WACC_Bool();
+        } else {
+            //TODO:ERROR
+            System.out.println("Semantics error: " + new WACC_Bool().toString() + "expected," + lhsType.toString() + " and " + rhsType.toString() + "found.");
+            return new WACC_Bool();
+        }
+
+    }
+
+
 }
