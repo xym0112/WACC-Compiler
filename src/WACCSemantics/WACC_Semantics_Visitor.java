@@ -172,26 +172,6 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         return expr;
     }
 
-    @Override
-    public WACC_Type visitBRACKETEXPR(@NotNull BRACKETEXPRContext ctx) {
-        return visit(ctx.expr());
-    }
-
-    private void unaryOperationError(String operation, UNARYOPContext ctx, String type) {
-        semanticError(operation + " unary operation can not be applied to " + type,
-                ctx.unaryOper().getStop().getLine(),
-                ctx.unaryOper().getStop().getCharPositionInLine());
-    }
-
-    // Print Semantic Error helper method
-    private void semanticError(String msg, int line, int pos) {
-        System.err.println("Semantic Error: " + msg
-                        + " at line " + line
-                        + " and position " + pos);
-
-        System.exit(200);
-    }
-
     // remove extra labels in binary
     @Override
     public WACC_Type visitBINARYOP(@NotNull BINARYOPContext ctx) {
@@ -224,4 +204,92 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         return visit(ctx.expr(0));
     }
 
+    @Override
+    public WACC_Type visitBRACKETEXPR(@NotNull BRACKETEXPRContext ctx) {
+        return visit(ctx.expr());
+    }
+
+    @Override
+    public WACC_Type visitPAIRFST(@NotNull PAIRFSTContext ctx) {
+        return visit(ctx.expr());
+    }
+
+    @Override
+    public WACC_Type visitPAIRSND(@NotNull PAIRSNDContext ctx) {
+        return visit(ctx.expr());
+    }
+
+    @Override
+    public WACC_Type visitPAIRARRAYTYPE(@NotNull PAIRARRAYTYPEContext ctx) {
+        return visit(ctx.type());
+    }
+
+    @Override
+    public WACC_Type visitPairType(@NotNull PairTypeContext ctx) {
+        WACC_Type left = visit(ctx.pairElemType(0));
+        WACC_Type right = visit(ctx.pairElemType(1));
+
+        return new WACC_PairType(left, right);
+    }
+
+    @Override
+    public WACC_Type visitArrayElem(@NotNull ArrayElemContext ctx) {
+        Variable var = currentST.lookUpAllVar(ctx.Ident().getText());
+        if (var == null) {
+            semanticError("var " + ctx.Ident().getText()
+                    + " does not exist",
+                    ctx.Ident().getSymbol().getLine(),
+                    ctx.Ident().getSymbol().getCharPositionInLine());
+        }
+
+        if (!(var.getType() instanceof WACC_ArrayType)) {
+            semanticError(ctx.Ident().getText()
+                            + " is not an array",
+                    ctx.Ident().getSymbol().getLine(),
+                    ctx.Ident().getSymbol().getCharPositionInLine());
+        }
+
+
+
+        for (ExprContext expr : ctx.expr()) {
+            WACC_ArrayType array = (WACC_ArrayType) var.getType();
+            WACC_Type type = visit(expr);
+            if (!(type.checkType(new WACC_BaseType(BaseType.INT)))) {
+                semanticError(expr.getText()
+                                + " should be an int",
+                        expr.getStop().getLine(),
+                        expr.getStop().getCharPositionInLine());
+            }
+
+            if (!(String.valueOf(array.getSize()).equals(expr.getText()))) {
+                semanticError(expr.getText()
+                                + " should be " + array.getSize(),
+                        expr.getStop().getLine(),
+                        expr.getStop().getCharPositionInLine());
+            }
+
+            visit(expr);
+        }
+
+
+
+
+
+
+    }
+
+    private void unaryOperationError(String operation, UNARYOPContext ctx, String type) {
+        semanticError(operation + " unary operation can not be applied to " + type,
+                ctx.unaryOper().getStop().getLine(),
+                ctx.unaryOper().getStop().getCharPositionInLine());
+    }
+
+    // Print Semantic Error helper method
+    private void semanticError(String msg, int line, int pos) {
+        System.err.println("Semantic Error: " + msg
+                        + " at line " + line
+                        + " and position " + pos);
+
+        System.exit(200);
+    }
 }
