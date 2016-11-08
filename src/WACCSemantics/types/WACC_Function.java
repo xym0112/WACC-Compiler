@@ -2,12 +2,15 @@ package WACCSemantics.types;
 
 import WACCSemantics.SymbolTable;
 
+import java.util.ArrayList;
+
 public class WACC_Function {
     private WACC_Type returnType;
-    private WACC_Parameters parameters;
+    private ArrayList<WACC_Type> parameters;
+//    private WACC_Parameters parameters;
     private SymbolTable symbolTable;
 
-    public WACC_Function(WACC_Type returnType, WACC_Parameters parameters, SymbolTable parent) {
+    public WACC_Function(WACC_Type returnType, ArrayList<WACC_Type> parameters, SymbolTable parent) {
         this.returnType = returnType;
         this.parameters = parameters;
         this.symbolTable = new SymbolTable(parent);
@@ -15,7 +18,7 @@ public class WACC_Function {
 
     public WACC_Function(WACC_Type returnType, SymbolTable parent) {
         this.symbolTable = new SymbolTable(parent);
-        this.parameters = new WACC_Parameters();
+        this.parameters = new ArrayList<>();
         this.returnType = returnType;
     }
 
