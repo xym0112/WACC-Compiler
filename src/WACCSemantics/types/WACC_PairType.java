@@ -1,4 +1,4 @@
-package WACCVisitors.Symbols;
+package WACCSemantics.types;
 
 public class WACC_PairType extends WACC_Type {
     private WACC_Type first;

@@ -1,4 +1,4 @@
-package WACCVisitors.Symbols;
+package WACCSemantics.types;
 
 public class WACC_ArrayType extends WACC_Type {
     private WACC_Type type;

@@ -1,4 +1,4 @@
-package WACCVisitors.Symbols;
+package WACCSemantics.types;
 
 public enum BaseType {
     INT,

@@ -1,4 +1,4 @@
-package WACCVisitors.Symbols;
+package WACCSemantics.types;
 
 public class WACC_BaseType extends WACC_Type {
     private BaseType type;

@@ -1,4 +1,4 @@
-package WACCVisitors.Symbols;
+package WACCSemantics.types;
 
 import java.util.ArrayList;
 
