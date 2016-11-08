@@ -4,6 +4,7 @@ import WACCSemantics.types.*;
 import antlr.WACCParser;
 import antlr.WACCParser.*;
 import antlr.WACCParserBaseVisitor;
+import com.sun.xml.internal.rngom.parse.host.Base;
 import org.antlr.v4.runtime.misc.NotNull;
 
 import java.util.ArrayList;
@@ -95,8 +96,6 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         }
     }
 
-
-
     @Override
     public WACC_Type visitRETURN(@NotNull RETURNContext ctx) {
         return visit(ctx.expr());
@@ -116,6 +115,8 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         return statType;
     }
 
+    // Expressions
+
     @Override
     public WACC_Type visitUNSIGNED(@NotNull UNSIGNEDContext ctx) {
         return new WACC_BaseType(BaseType.INT);
@@ -134,6 +135,57 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
     @Override
     public WACC_Type visitSTRLITER(@NotNull STRLITERContext ctx) {
         return new WACC_BaseType(BaseType.STRING);
+    }
+
+    @Override
+    public WACC_Type visitPAIRLITER(@NotNull PAIRLITERContext ctx) {
+        return new WACC_BaseType(BaseType.NULL);
+    }
+
+    @Override
+    public WACC_Type visitEXPRIDENT(@NotNull EXPRIDENTContext ctx) {
+        return currentST.lookUpAllVar(ctx.Ident().getText()).getType();
+    }
+
+    @Override
+    public WACC_Type visitUNARYOP(@NotNull UNARYOPContext ctx) {
+        WACC_Type expr = visit(ctx.expr());
+        String operation = ctx.unaryOper().getText();
+
+        if (operation.equals("!")
+                && !expr.checkType(new WACC_BaseType(BaseType.BOOL))) {
+            unaryOperationError(operation, ctx);
+        } else if (!expr.checkType(new WACC_BaseType(BaseType.INT))
+                && (operation.equals("+") || operation.equals("-")
+                || operation.equals("len") || operation.equals("chr"))) {
+            unaryOperationError(operation, ctx);
+        } else if (!expr.checkType(new WACC_BaseType(BaseType.CHAR))
+                && operation.equals("ord")) {
+            unaryOperationError(operation, ctx);
+        }
+
+        return visit(ctx.unaryOper());
+    }
+
+    @Override
+    public WACC_Type visitUNOPLEN(@NotNull UNOPLENContext ctx) {
+        return new WACC_BaseType(BaseType.INT);
+    }
+
+    @Override
+    public WACC_Type visitUNOPORD(@NotNull UNOPORDContext ctx) {
+        return new WACC_BaseType(BaseType.CHAR);
+    }
+
+    @Override
+    public WACC_Type visitUNOPCHR(@NotNull UNOPCHRContext ctx) {
+        return super.visitUNOPCHR(ctx);
+    }
+
+    private void unaryOperationError(String operation, UNARYOPContext ctx) {
+        semanticError(operation + " unary operation can only be applied to bool",
+                ctx.unaryOper().getStop().getLine(),
+                ctx.unaryOper().getStop().getCharPositionInLine());
     }
 
     // Print Semantic Error helper method
