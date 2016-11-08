@@ -9,10 +9,10 @@ public class WACC_Function {
     private ArrayList<WACC_Type> parameters;
     private SymbolTable symbolTable;
 
-    public WACC_Function(WACC_Type returnType, WACC_Type[] parameters, SymbolTable symbolTable) {
+    public WACC_Function(WACC_Type returnType, WACC_Type[] parameters, SymbolTable parent) {
         this.returnType = returnType;
         this.parameters = new ArrayList<WACC_Type>();
-        this.symbolTable = new SymbolTable(symbolTable);
+        this.symbolTable = new SymbolTable(parent);
     }
 
     public WACC_Type getReturnType() {

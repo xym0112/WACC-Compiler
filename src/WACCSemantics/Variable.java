@@ -1,4 +1,6 @@
-package WACCSemantics.types;
+package WACCSemantics;
+
+import WACCSemantics.types.WACC_Type;
 
 public class Variable {
     private WACC_Type type;

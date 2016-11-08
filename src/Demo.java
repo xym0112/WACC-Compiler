@@ -1,3 +1,4 @@
+import WACCSemantics.WACC_Semantics_Visitor;
 import antlr.WACCLexer;
 import antlr.WACCParser;
 import org.antlr.v4.runtime.ANTLRInputStream;
@@ -11,7 +12,7 @@ public class Demo {
     public static void main(String[] args) throws Exception {
 
         try {
-            ANTLRInputStream input = new ANTLRInputStream(new FileInputStream("valid/basic/exit/exit-1.wacc"));
+            ANTLRInputStream input = new ANTLRInputStream(new FileInputStream("valid/function/simple_functions/functionSimple.wacc"));
             WACCLexer lexer  = new WACCLexer(input);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             WACCParser parser = new WACCParser(tokens);
@@ -19,8 +20,8 @@ public class Demo {
             ParseTree tree = parser.prog();
 
 
-//            WACC_Visitor visitor = new WACC_Visitor();
-//            visitor.visit(tree); // need to add thing
+            WACC_Semantics_Visitor visitor = new WACC_Semantics_Visitor();
+            visitor.visit(tree); // need to add thing
         }catch (IOException e) {
             System.out.println("Not Accepted");
         }catch(IllegalArgumentException e){

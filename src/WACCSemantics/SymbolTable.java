@@ -51,21 +51,21 @@ public class SymbolTable {
         return null;
     }
 
-    public WACC_Function addFunc(String funcId, WACC_Function var) {
-        return functionDictionary.put(funcId,var);
+    public WACC_Function addFunc(String funcName, WACC_Function func) {
+        return functionDictionary.put(funcName, func);
     }
 
-    public WACC_Function lookupFunc(String varId) {
-        return functionDictionary.get(varId);
+    public WACC_Function lookupFunc(String funcName) {
+        return functionDictionary.get(funcName);
     }
 
-    public WACC_Function lookUpAllFunc(String varId) {
+    public WACC_Function lookUpAllFunc(String funcName) {
 
         SymbolTable self = this;
         WACC_Function var = null;
 
         while (self != null) {
-            var = lookupFunc(varId);
+            var = lookupFunc(funcName);
             if (var  != null) {
                 return var;
             }
