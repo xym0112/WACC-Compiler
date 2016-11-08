@@ -1,6 +1,6 @@
 package WACCSemantics.types;
 
-public class WACC_ArrayType extends WACC_Type {
+public class WACC_ArrayType implements WACC_Type {
     private WACC_Type type;
 
     public WACC_ArrayType(WACC_Type type) {
@@ -12,7 +12,7 @@ public class WACC_ArrayType extends WACC_Type {
     }
 
     @Override
-    protected boolean checkType(WACC_Type ident) {
+    public boolean checkType(WACC_Type ident) {
         if (!(ident instanceof WACC_ArrayType)) return false;
 
         WACC_ArrayType identArrayType = (WACC_ArrayType) ident;

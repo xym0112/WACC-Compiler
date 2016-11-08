@@ -42,11 +42,10 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         String funcName = ctx.Ident().getText();
         WACC_Type funcRetType = visit(ctx.type());
 
-        ArrayList<WACC_Type> funcParams = new ArrayList<>();
+        ArrayList<WACC_Type> funcParams = new ArrayList<WACC_Type>();
 
         if (ctx.paramList() != null) {
             for (int i = 0; i < ctx.paramList().param().size(); i++) {
-
                 funcParams.add(visit(ctx.paramList().param(i)));
             }
         }
@@ -60,7 +59,8 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         // set current symbol table to parent
         WACC_Type statRetType = visit(ctx.stat());
         currentST = currentST.getEncSymTable();
-        if(funcRetType != statRetType) {
+
+        if(!funcRetType.checkType(statRetType)) {
             semanticError("Function " + funcName + " has conflicting return types",
                     ctx.Ident().getSymbol().getLine(),
                     ctx.Ident().getSymbol().getCharPositionInLine());

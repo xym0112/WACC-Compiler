@@ -18,7 +18,7 @@ public class WACC_Function {
 
     public WACC_Function(WACC_Type returnType, SymbolTable parent) {
         this.symbolTable = new SymbolTable(parent);
-        this.parameters = new ArrayList<>();
+        this.parameters = new ArrayList<WACC_Type>();
         this.returnType = returnType;
     }
 

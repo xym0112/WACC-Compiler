@@ -72,6 +72,15 @@ public class SymbolTable {
         }
         return null;
     }
+
+
+    @Override
+    public String toString() {
+        return "SymbolTable{" +
+                "functionDictionary=" + functionDictionary +
+                ", variableDictionary=" + variableDictionary +
+                '}';
+    }
 }
 
 
