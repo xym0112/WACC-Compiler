@@ -27,5 +27,19 @@ public class WACC_BaseType implements WACC_Type {
         return type.toString();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
+        WACC_BaseType that = (WACC_BaseType) o;
+
+        return type == that.type;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return type != null ? type.hashCode() : 0;
+    }
 }

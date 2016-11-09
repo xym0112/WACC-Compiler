@@ -4,10 +4,12 @@ import WACCSemantics.types.*;
 import antlr.WACCParser;
 import antlr.WACCParser.*;
 import antlr.WACCParserBaseVisitor;
+import jdk.nashorn.internal.objects.annotations.Function;
 import org.antlr.v4.runtime.misc.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 
 public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
@@ -21,53 +23,78 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
     public WACC_Type visitProg(@NotNull ProgContext ctx) {
         for (FuncContext func : ctx.func()) {
             String funcName = func.Ident().getText();
+            WACC_Type funcRetType = visit(func.type());
 
             if (currentST.lookUpAllFunc(funcName) != null) {
-                semanticError("Function " + funcName + " previously defined",
+                semanticError("function " + funcName + " previously defined",
                         func.Ident().getSymbol().getLine(),
                         func.Ident().getSymbol().getCharPositionInLine());
             }
 
-            visit(func);
+            currentST = new SymbolTable(currentST);
+
+            ArrayList<WACC_Type> funcParams = new ArrayList<WACC_Type>();
+
+            if (func.paramList() != null) {
+                for (int i = 0; i < func.paramList().param().size(); i++) {
+                    funcParams.add(visit(func.paramList().param(i)));
+                }
+            }
+
+            if (!funcParams.isEmpty()) {
+                currentST.getEncSymTable().addFunc(funcName, new WACC_Function(funcRetType, funcParams, currentST));
+            } else {
+                currentST.getEncSymTable().addFunc(funcName, new WACC_Function(funcRetType, currentST));
+            }
+
+            currentST = currentST.getEncSymTable();
         }
 
-        visit(ctx.stat());
+        for (FuncContext func : ctx.func()){
+            currentST = currentST.lookUpAllFunc(func.Ident().getText()).getSymbolTable();
+            visit(func);
+            currentST = currentST.getEncSymTable();
+        }
+
         return null;
     }
 
     @Override
     public WACC_Type visitFunc(@NotNull FuncContext ctx) {
-        // create a new symbol table with current table as parent
-        currentST = new SymbolTable(currentST);
+//        // create a new symbol table with current table as parent
+//        currentST = new SymbolTable(currentST);
+//
+//        String funcName = ctx.Ident().getText();
+//        WACC_Type funcRetType = visit(ctx.type());
+//
+//        ArrayList<WACC_Type> funcParams = new ArrayList<WACC_Type>();
+//
+//        if (ctx.paramList() != null) {
+//            for (int i = 0; i < ctx.paramList().param().size(); i++) {
+//                funcParams.add(visit(ctx.paramList().param(i)));
+//            }
+//        }
+//
+//        if (!funcParams.isEmpty()) {
+//            currentST.getEncSymTable().addFunc(funcName, new WACC_Function(funcRetType, funcParams, currentST.getEncSymTable()));
+//        } else {
+//            currentST.getEncSymTable().addFunc(funcName, new WACC_Function(funcRetType, currentST.getEncSymTable()));
+//        }
+//
+//        // set current symbol table to parent
+//        WACC_Type statRetType = visit(ctx.stat());
+//
+//        currentST = currentST.getEncSymTable();\
 
-        String funcName = ctx.Ident().getText();
-        WACC_Type funcRetType = visit(ctx.type());
+        WACC_Type funcRetType = currentST.lookUpAllFunc(ctx.Ident().getText()).getReturnType();
 
-        ArrayList<WACC_Type> funcParams = new ArrayList<WACC_Type>();
-
-        if (ctx.paramList() != null) {
-            for (int i = 0; i < ctx.paramList().param().size(); i++) {
-                funcParams.add(visit(ctx.paramList().param(i)));
-            }
-        }
-
-        // set current symbol table to parent
         WACC_Type statRetType = visit(ctx.stat());
 
-        currentST = currentST.getEncSymTable();
-
-        if (!funcParams.isEmpty()) {
-            currentST.addFunc(funcName, new WACC_Function(funcRetType, funcParams, currentST));
-        } else {
-            currentST.addFunc(funcName, new WACC_Function(funcRetType, currentST));
-        }
-
-        if(!funcRetType.checkType(statRetType)) {
-            semanticError("Function " + funcName + " has conflicting return types",
+        if (!funcRetType.checkType(statRetType)) {
+            semanticError("Function " + ctx.Ident().getText() + " has conflicting return types",
                     ctx.Ident().getSymbol().getLine(),
                     ctx.Ident().getSymbol().getCharPositionInLine());
         }
-
         return funcRetType;
     }
 
@@ -107,6 +134,8 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         String varName = ctx.Ident().getText();
         Variable variable = new Variable(varType);
 
+        System.out.println(varValue);
+        System.out.println(varType);
 
         // check if we already declared the variable
         if ((currentST.lookUpAllVar(varName) != null)
@@ -125,8 +154,6 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
         // check if the var's types conflict with the lhs
         if (!varType.checkType(varValue)){
-            System.out.println(varType);
-            System.out.println(varValue);
             semanticError("variable " + varName + " is assigned to a value of different type",
                     ctx.Ident().getSymbol().getLine(),
                     ctx.Ident().getSymbol().getCharPositionInLine());
@@ -236,6 +263,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         WACC_Type innerType = visit(ctx.stat());
         currentST = currentST.getEncSymTable();
 
+
         return innerType;
     }
 
@@ -298,8 +326,6 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
             }
         }
 
-        Collections.reverse(argList);
-
         if (!argList.equals(function.getParameters())) {
             semanticError(" arguments do not match function " + funcName,
                     ctx.argList().getStart().getLine(),
@@ -316,7 +342,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         Variable var = currentST.lookUpAllVar(ctx.Ident().getText());
 
         if (var == null) {
-            semanticError("variable named " + var + " doesn't exit",
+            semanticError("variable named " + ctx.Ident().getText() + " doesn't exit",
                     ctx.Ident().getSymbol().getLine(),
                     ctx.Ident().getSymbol().getCharPositionInLine());
         }
@@ -348,6 +374,11 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
     }
 
     @Override
+    public WACC_Type visitPAIRPAIR(@NotNull PAIRPAIRContext ctx) {
+        return null;
+    }
+
+    @Override
     public WACC_Type visitPAIRSND(@NotNull PAIRSNDContext ctx) {
         Variable var = currentST.lookUpAllVar(ctx.expr().getText());
 
@@ -372,15 +403,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitTYPEBASE(@NotNull TYPEBASEContext ctx) {
-        if (ctx.BaseType().toString().equals("char")) {
-            return new WACC_BaseType(BaseType.CHAR);
-        } else if (ctx.BaseType().toString().equals("int")) {
-            return new WACC_BaseType(BaseType.INT);
-        } else if (ctx.BaseType().toString().equals("bool")) {
-            return new WACC_BaseType(BaseType.BOOL);
-        } else {
-            return new WACC_BaseType(BaseType.STRING);
-        }
+        return visitBaseTypeHelper(ctx.BaseType().toString());
     }
 
     @Override
@@ -396,13 +419,29 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         return new WACC_PairType(left, right);
     }
 
+    @Override
+    public WACC_Type visitPAIRBASETYPE(@NotNull PAIRBASETYPEContext ctx) {
+        return visitBaseTypeHelper(ctx.BaseType().toString());
+    }
+
+    private WACC_Type visitBaseTypeHelper(String baseType) {
+        if (baseType.equals("char")) {
+            return new WACC_BaseType(BaseType.CHAR);
+        } else if (baseType.equals("int")) {
+            return new WACC_BaseType(BaseType.INT);
+        } else if (baseType.equals("bool")) {
+            return new WACC_BaseType(BaseType.BOOL);
+        } else {
+            return new WACC_BaseType(BaseType.STRING);
+        }
+    }
+
     // Expressions
 
     @Override
     public WACC_Type visitUNSIGNED(@NotNull UNSIGNEDContext ctx) {
         return new WACC_BaseType(BaseType.INT);
     }
-
 
     @Override
     public WACC_Type visitBOOLLITER(@NotNull BOOLLITERContext ctx) {
@@ -459,36 +498,49 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         return expr;
     }
 
-    // remove extra labels in binary
     @Override
     public WACC_Type visitBINARYOP(@NotNull BINARYOPContext ctx) {
         String operation = ctx.binaryOper().getText();
         WACC_Type expr1 = visit(ctx.expr(0));
         WACC_Type expr2 = visit(ctx.expr(1));
 
-        if (operation.equals("*") || operation.equals("/") || operation.equals("+")
-                || operation.equals("-") || operation.equals("%")){
-
-            if (!expr1.checkType(new WACC_BaseType(BaseType.INT)) ||
-                    !expr2.checkType(new WACC_BaseType(BaseType.INT))) {
-                semanticError("this binary can only be operated to Integer ", ctx.binaryOper().getStart().getLine()
-                        , ctx.binaryOper().getStart().getCharPositionInLine());
-            } else {
-                return new WACC_BaseType(BaseType.INT);
-            }
+        if ((operation.equals("*") || operation.equals("/") || operation.equals("+")
+                || operation.equals("-") || operation.equals("%"))
+            && (!expr1.checkType(new WACC_BaseType(BaseType.INT)) ||
+                !expr2.checkType(new WACC_BaseType(BaseType.INT)))
+                ) {
+            semanticError("this binary operation can only be applied to int", ctx.binaryOper().getStart().getLine()
+                    , ctx.binaryOper().getStart().getCharPositionInLine());
         }
-        else {
 
-            if (!expr1.checkType(visit(ctx.expr(1))) || !expr1.checkType(new WACC_BaseType(BaseType.INT))
-                    || !expr1.checkType(new WACC_BaseType(BaseType.BOOL)) ||
-                    !expr1.checkType(new WACC_BaseType(BaseType.STRING))){
-                semanticError("this binary can only be operated to given type ", ctx.binaryOper().getStart().getLine()
-                        , ctx.binaryOper().getStart().getCharPositionInLine());
-            }   else {
-                return new WACC_BaseType(BaseType.BOOL);
-            }
+        if ((operation.equals("<") || operation.equals(">") || operation.equals("<=")
+                || operation.equals(">="))
+                && !expr1.checkType(expr2) && (!expr1.checkType(new WACC_BaseType(BaseType.CHAR))
+                || !expr1.checkType(new WACC_BaseType(BaseType.INT)))) {
+            semanticError("this binary operation can only be applied two equal types of int and chars", ctx.binaryOper().getStart().getLine()
+                    , ctx.binaryOper().getStart().getCharPositionInLine());
         }
-        return visit(ctx.expr(0));
+
+        if ((operation.equals("==") || operation.equals("!=")) && !expr1.checkType(expr2) && (
+                !expr1.checkType(new WACC_BaseType(BaseType.CHAR)) || !expr1.checkType(new WACC_BaseType(BaseType.BOOL))
+                || !expr1.checkType(new WACC_BaseType(BaseType.INT)) || !(expr1 instanceof WACC_PairType))) {
+            semanticError(operation + " operation can only be applied two equal types of char, bool, int and pair", ctx.binaryOper().getStart().getLine()
+                    , ctx.binaryOper().getStart().getCharPositionInLine());
+        }
+
+        if ((operation.equals("&&") || operation.equals("||"))
+                && !expr1.checkType(expr2) && (!expr1.checkType(new WACC_BaseType(BaseType.BOOL)))) {
+            semanticError("this binary operation can only be applied two equal types of bool", ctx.binaryOper().getStart().getLine()
+                    , ctx.binaryOper().getStart().getCharPositionInLine());
+        }
+
+        if ((operation.equals("<=") || operation.equals(">=") || operation.equals("==")
+                || operation.equals("!=") || operation.equals("<") || operation.equals(">")
+                || operation.equals("&&")) || operation.equals("||")) {
+            return new WACC_BaseType(BaseType.BOOL);
+        }
+
+        return new WACC_BaseType(BaseType.INT);
     }
 
     @Override
@@ -533,7 +585,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitArrayLiter(@NotNull ArrayLiterContext ctx) {
-        if(ctx.expr(0) == null) return new WACC_ArrayType(null);
+        if (ctx.expr(0) == null) return new WACC_ArrayType(null);
 
         WACC_Type fstType = visit(ctx.expr(0));
 
@@ -545,7 +597,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
             }
         }
 
-        return fstType;
+        return new WACC_ArrayType(fstType);
     }
 
     private void unaryOperationError(String operation, UNARYOPContext ctx, String type) {

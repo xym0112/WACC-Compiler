@@ -41,7 +41,7 @@ public class SymbolTable {
         Variable var = null;
 
         while (self != null) {
-            var = lookupVar(varId);
+            var = self.lookupVar(varId);
             if (var  != null) {
                 return var;
             }
@@ -64,7 +64,7 @@ public class SymbolTable {
         WACC_Function var = null;
 
         while (self != null) {
-            var = lookupFunc(funcName);
+            var = self.lookupFunc(funcName);
             if (var  != null) {
                 return var;
             }

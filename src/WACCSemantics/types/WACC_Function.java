@@ -10,14 +10,14 @@ public class WACC_Function {
 //    private WACC_Parameters parameters;
     private SymbolTable symbolTable;
 
-    public WACC_Function(WACC_Type returnType, ArrayList<WACC_Type> parameters, SymbolTable parent) {
+    public WACC_Function(WACC_Type returnType, ArrayList<WACC_Type> parameters, SymbolTable symbolTable) {
         this.returnType = returnType;
         this.parameters = parameters;
-        this.symbolTable = new SymbolTable(parent);
+        this.symbolTable = symbolTable;
     }
 
-    public WACC_Function(WACC_Type returnType, SymbolTable parent) {
-        this.symbolTable = new SymbolTable(parent);
+    public WACC_Function(WACC_Type returnType, SymbolTable symbolTable) {
+        this.symbolTable = symbolTable;
         this.parameters = new ArrayList<WACC_Type>();
         this.returnType = returnType;
     }
@@ -33,5 +33,9 @@ public class WACC_Function {
 
     public ArrayList<WACC_Type> getParameters() {
         return parameters;
+    }
+
+    public SymbolTable getSymbolTable() {
+        return symbolTable;
     }
 }
