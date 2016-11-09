@@ -9,7 +9,7 @@ import org.antlr.v4.runtime.misc.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 
-//TODO fix arrayliter, exit, skip, assign, read,free,return,print,println, pairelem
+//TODO exit, skip, assign, read,free,return,print,println, pairelem
 
 public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
@@ -92,6 +92,64 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
     }
 
     @Override
+    public WACC_Type visitPRINT(@NotNull PRINTContext ctx) {
+        visit(ctx.expr());
+        return null;
+    }
+
+    @Override
+    public WACC_Type visitREAD(@NotNull READContext ctx) {
+        WACC_Type exprType = visit(ctx.assignRhs());
+
+        if(!(exprType.checkType(new WACC_BaseType(BaseType.INT))
+            || (exprType.checkType(new WACC_BaseType(BaseType.CHAR))))) {
+            semanticError("Variable cannot be read into at ",
+                    ctx.assignRhs().getStop().getLine(),
+                    ctx.assignRhs().getStop().getCharPositionInLine());
+        }
+
+        return null;
+    }
+
+    @Override
+    public WACC_Type visitEXIT(@NotNull EXITContext ctx) {
+        WACC_Type exprType = visit(ctx.expr());
+
+        if(!(exprType.checkType(new WACC_BaseType(BaseType.INT)))) {
+            semanticError("Exitcode isnt a number at ",
+                    ctx.expr().getStop().getLine(),
+                    ctx.expr().getStop().getCharPositionInLine());
+        }
+
+        return null;
+    }
+
+    @Override
+    public WACC_Type visitSKIPSTAT(@NotNull SKIPSTATContext ctx) {
+        return null;
+    }
+
+    @Override
+    public WACC_Type visitPRINTLN(@NotNull PRINTLNContext ctx) {
+        visit(ctx.expr());
+        return null;
+    }
+
+    @Override
+    public WACC_Type visitFREE(@NotNull FREEContext ctx) {
+        WACC_Type exprType = visit(ctx.expr());
+
+        if(!(exprType instanceof WACC_ArrayType)
+                || (exprType instanceof WACC_PairType) ){
+            semanticError("Variable cannot be freed at ",
+                    ctx.expr().getStop().getLine(),
+                    ctx.expr().getStop().getCharPositionInLine());
+        }
+
+        return null;
+    }
+
+    @Override
     public WACC_Type visitCREATEVAR(@NotNull CREATEVARContext ctx) {
         WACC_Type varType = visit(ctx.type());
         WACC_Type varValue = visit(ctx.assignRhs());
@@ -129,7 +187,14 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitASSIGNVAR(@NotNull ASSIGNVARContext ctx) {
-        return super.visitASSIGNVAR(ctx);
+        WACC_Type lhs = visit(ctx.assignLhs());
+        WACC_Type rhs = visit(ctx.assignRhs());
+        if (!(lhs.checkType(rhs))) {
+            semanticError("Variable assigned to wron type at ",
+                    ctx.ASSIGN().getSymbol().getLine(),
+                    ctx.ASSIGN().getSymbol().getCharPositionInLine());
+        }
+        return null;
     }
 
     @Override
@@ -408,6 +473,20 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         }
 
         return var.getType();
+    }
+
+    @Override
+    public WACC_Type visitArrayLiter(@NotNull ArrayLiterContext ctx) {
+        if(ctx.expr(0) == null) return new WACC_ArrayType(null);
+        WACC_Type fstType = visit(ctx.expr(0));
+        for (int i = 1; i < ctx.expr().size(); i++) {
+            if (!(fstType.checkType(visit(ctx.expr(i))))) {
+                semanticError("Different types in array at ",
+                        ctx.expr(i).getStop().getLine(),
+                        ctx.expr(i).getStop().getCharPositionInLine());
+            }
+        }
+
     }
 
     private void unaryOperationError(String operation, UNARYOPContext ctx, String type) {
