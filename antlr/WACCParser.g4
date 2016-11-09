@@ -64,6 +64,7 @@ expr : UNSIGNED                                     #UNSIGNED
      | arrayElem                                    #EXPRARRAYELEM
      | unaryOper expr                               #UNARYOP
      | expr binaryOper expr                         #BINARYOP
+     | expr logicalOper expr                        #LOGICEXPR
      | LPAREN expr RPAREN                           #BRACKETEXPR
 ;
 
@@ -86,8 +87,10 @@ binaryOper : MUL                                    #BIOPMUL
            | LE                                     #BIOPLE
            | EQUAL                                  #BIOPEQUAL
            | NOTEQUAL                               #BIOPNQ
-           | AND                                    #BIOPAND
-           | OR                                     #BIOPOR
+;
+
+logicalOper : OR
+            | AND
 ;
 
 arrayElem  : Ident (LBRACK expr RBRACK)+;

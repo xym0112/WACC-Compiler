@@ -1,6 +1,7 @@
 package WACCSemantics;
 
 import WACCSemantics.types.*;
+import antlr.WACCParser;
 import antlr.WACCParser.*;
 import antlr.WACCParserBaseVisitor;
 import org.antlr.v4.runtime.misc.NotNull;
@@ -437,6 +438,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
             semanticError(ctx.Ident().getText() + " Identifier doesn't exist", ctx.Ident().getSymbol().getLine(),
                     ctx.Ident().getSymbol().getCharPositionInLine());
         }
+
         return currentST.lookUpAllVar(ctx.Ident().getText()).getType();
     }
 
@@ -491,27 +493,40 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
                     , ctx.binaryOper().getStart().getCharPositionInLine());
         }
 
+
         if ((operation.equals("==") || operation.equals("!=")) && !expr1.checkType(expr2) && (
                 !expr1.checkType(new WACC_BaseType(BaseType.CHAR)) || !expr1.checkType(new WACC_BaseType(BaseType.BOOL))
                 || !expr1.checkType(new WACC_BaseType(BaseType.INT)) || !(expr1 instanceof WACC_PairType))) {
+
+
             semanticError(operation + " operation can only be applied two equal types of char, bool, int and pair", ctx.binaryOper().getStart().getLine()
                     , ctx.binaryOper().getStart().getCharPositionInLine());
         }
 
-        if ((operation.equals("&&") || operation.equals("||"))
-                && !expr1.checkType(expr2) && (!expr1.checkType(new WACC_BaseType(BaseType.BOOL)))) {
-            semanticError("this binary operation can only be applied two equal types of bool", ctx.binaryOper().getStart().getLine()
-                    , ctx.binaryOper().getStart().getCharPositionInLine());
-        }
 
-        if ((operation.equals("<=") || operation.equals(">=") || operation.equals("==")
+        if (operation.equals("<=") || operation.equals(">=") || operation.equals("==")
                 || operation.equals("!=") || operation.equals("<") || operation.equals(">")
-                || operation.equals("&&")) || operation.equals("||")) {
+                ) {
             return new WACC_BaseType(BaseType.BOOL);
         }
 
         return new WACC_BaseType(BaseType.INT);
     }
+
+
+    @Override
+    public WACC_Type visitLOGICEXPR(@NotNull LOGICEXPRContext ctx) {
+        WACC_Type expr1 = visit(ctx.expr(0));
+        WACC_Type expr2 = visit(ctx.expr(1));
+
+        if (!expr1.checkType(expr2) && !expr1.checkType(new WACC_BaseType(BaseType.BOOL))) {
+            semanticError("OR, AND operation can only be applied two booleans", ctx.logicalOper().getStart().getLine()
+                    , ctx.logicalOper().getStart().getCharPositionInLine());
+        }
+
+        return new WACC_BaseType(BaseType.BOOL);
+    }
+
 
     @Override
     public WACC_Type visitBRACKETEXPR(@NotNull BRACKETEXPRContext ctx) {

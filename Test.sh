@@ -1,4 +1,7 @@
 #!/bin/bash
 
+#make;
+#find valid -name "*.wacc" -type f -print0 -exec ./grun antlr.WACC prog {} \;
+
 make;
-find valid -name "*.wacc" -type f -exec ./compile {} \;
+find valid -name "*.wacc" -type f -print0 -exec ./compile {} \;
