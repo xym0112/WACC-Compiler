@@ -9,8 +9,6 @@ import org.antlr.v4.runtime.misc.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 
-//TODO pairelem
-
 public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     SymbolTable currentST;
@@ -84,30 +82,8 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         return paramType;
     }
 
-    // Statements
-
     @Override
-    public WACC_Type visitRETURN(@NotNull RETURNContext ctx) {
-        return visit(ctx.expr());
-    }
-
-    @Override
-    public WACC_Type visitPRINT(@NotNull PRINTContext ctx) {
-        visit(ctx.expr());
-        return null;
-    }
-
-    @Override
-    public WACC_Type visitREAD(@NotNull READContext ctx) {
-        WACC_Type exprType = visit(ctx.assignRhs());
-
-        if(!(exprType.checkType(new WACC_BaseType(BaseType.INT))
-            || (exprType.checkType(new WACC_BaseType(BaseType.CHAR))))) {
-            semanticError("Variable cannot be read into at ",
-                    ctx.assignRhs().getStop().getLine(),
-                    ctx.assignRhs().getStop().getCharPositionInLine());
-        }
-
+    public WACC_Type visitSKIPSTAT(@NotNull SKIPSTATContext ctx) {
         return null;
     }
 
@@ -116,32 +92,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         WACC_Type exprType = visit(ctx.expr());
 
         if(!(exprType.checkType(new WACC_BaseType(BaseType.INT)))) {
-            semanticError("Exitcode isnt a number at ",
-                    ctx.expr().getStop().getLine(),
-                    ctx.expr().getStop().getCharPositionInLine());
-        }
-
-        return null;
-    }
-
-    @Override
-    public WACC_Type visitSKIPSTAT(@NotNull SKIPSTATContext ctx) {
-        return null;
-    }
-
-    @Override
-    public WACC_Type visitPRINTLN(@NotNull PRINTLNContext ctx) {
-        visit(ctx.expr());
-        return null;
-    }
-
-    @Override
-    public WACC_Type visitFREE(@NotNull FREEContext ctx) {
-        WACC_Type exprType = visit(ctx.expr());
-
-        if(!(exprType instanceof WACC_ArrayType)
-                || (exprType instanceof WACC_PairType) ){
-            semanticError("Variable cannot be freed at ",
+            semanticError("exit code should be a number",
                     ctx.expr().getStop().getLine(),
                     ctx.expr().getStop().getCharPositionInLine());
         }
@@ -159,7 +110,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
         // check if we already declared the variable
         if ((currentST.lookUpAllVar(varName) != null)
-            && (currentST.lookUpAllVar(varName).isDeclared())) {
+                && (currentST.lookUpAllVar(varName).isDeclared())) {
             semanticError("variable " + varName + " is assigned to an already declared variable",
                     ctx.Ident().getSymbol().getLine(),
                     ctx.Ident().getSymbol().getCharPositionInLine());
@@ -177,8 +128,8 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
             System.out.println(varType);
             System.out.println(varValue);
             semanticError("variable " + varName + " is assigned to a value of different type",
-                ctx.Ident().getSymbol().getLine(),
-                ctx.Ident().getSymbol().getCharPositionInLine());
+                    ctx.Ident().getSymbol().getLine(),
+                    ctx.Ident().getSymbol().getCharPositionInLine());
         }
 
         variable.setDeclared(true);
@@ -200,31 +151,51 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
     }
 
     @Override
-    public WACC_Type visitBEGIN(@NotNull BEGINContext ctx) {
-        // Create a new symbol table with the current one as its parent
-        currentST = new SymbolTable(currentST);
+    public WACC_Type visitREAD(@NotNull READContext ctx) {
+        WACC_Type exprType = visit(ctx.assignRhs());
 
-        //TODO:Test var scopes once we have them
-        WACC_Type statType = visit(ctx.stat());
+        if(!(exprType.checkType(new WACC_BaseType(BaseType.INT))
+                || (exprType.checkType(new WACC_BaseType(BaseType.CHAR))))) {
+            semanticError("Variable cannot be read into at ",
+                    ctx.assignRhs().getStop().getLine(),
+                    ctx.assignRhs().getStop().getCharPositionInLine());
+        }
 
-        // Make current symbol table the previous ones parent
-        currentST = currentST.getEncSymTable();
-
-        return statType;
+        return null;
     }
 
     @Override
-    public WACC_Type visitSEQUENCE(@NotNull SEQUENCEContext ctx) {
-        WACC_Type fstStat = visit(ctx.stat(0));
-        WACC_Type sndStat = visit(ctx.stat(1));
-        if ((fstStat == null)) {
-            return sndStat;
-        } else {
-            // TODO: sAssuming syntax is correct allows us to assume that sndstat is null
-            assert(sndStat == null);
-            return fstStat;
+    public WACC_Type visitFREE(@NotNull FREEContext ctx) {
+        WACC_Type exprType = visit(ctx.expr());
+
+        if(!(exprType instanceof WACC_ArrayType)
+                || (exprType instanceof WACC_PairType) ){
+            semanticError("Variable cannot be freed at ",
+                    ctx.expr().getStop().getLine(),
+                    ctx.expr().getStop().getCharPositionInLine());
         }
 
+        return null;
+    }
+
+
+    // Statements
+
+    @Override
+    public WACC_Type visitRETURN(@NotNull RETURNContext ctx) {
+        return visit(ctx.expr());
+    }
+
+    @Override
+    public WACC_Type visitPRINT(@NotNull PRINTContext ctx) {
+        visit(ctx.expr());
+        return null;
+    }
+
+    @Override
+    public WACC_Type visitPRINTLN(@NotNull PRINTLNContext ctx) {
+        visit(ctx.expr());
+        return null;
     }
 
     @Override
@@ -268,7 +239,34 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         return innerType;
     }
 
+    @Override
+    public WACC_Type visitBEGIN(@NotNull BEGINContext ctx) {
+        // Create a new symbol table with the current one as its parent
+        currentST = new SymbolTable(currentST);
 
+        //TODO:Test var scopes once we have them
+        WACC_Type statType = visit(ctx.stat());
+
+        // Make current symbol table the previous ones parent
+        currentST = currentST.getEncSymTable();
+
+        return statType;
+    }
+
+    @Override
+    public WACC_Type visitSEQUENCE(@NotNull SEQUENCEContext ctx) {
+        WACC_Type fstStat = visit(ctx.stat(0));
+        WACC_Type sndStat = visit(ctx.stat(1));
+        if ((fstStat == null)) {
+            return sndStat;
+        } else {
+            // TODO: sAssuming syntax is correct allows us to assume that sndstat is null
+            assert (sndStat == null);
+            return fstStat;
+        }
+    }
+
+    // Assign RHS
 
     @Override
     public WACC_Type visitRHSEXPR(@NotNull RHSEXPRContext ctx) {
@@ -311,6 +309,67 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         return function.getReturnType();
     }
 
+    // Assign LHS
+
+    @Override
+    public WACC_Type visitLHSIDENT(@NotNull LHSIDENTContext ctx) {
+        Variable var = currentST.lookUpAllVar(ctx.Ident().getText());
+
+        if (var == null) {
+            semanticError("variable named " + var + " doesn't exit",
+                    ctx.Ident().getSymbol().getLine(),
+                    ctx.Ident().getSymbol().getCharPositionInLine());
+        }
+
+        return var.getType();
+    }
+
+    // Pair Elem
+
+    @Override
+    public WACC_Type visitPAIRFST(@NotNull PAIRFSTContext ctx) {
+        Variable var = currentST.lookUpAllVar(ctx.expr().getText());
+
+        if (var == null) {
+            semanticError("variable " + ctx.expr().getText() + " doesn't exit",
+                    ctx.expr().getStart().getLine(),
+                    ctx.expr().getStart().getCharPositionInLine());
+        }
+
+        if (!(var.getType() instanceof WACC_PairType)) {
+            semanticError(ctx.expr().getText() + " is not a pair",
+                    ctx.expr().getStart().getLine(),
+                    ctx.expr().getStart().getCharPositionInLine());
+        }
+
+        WACC_PairType pair = (WACC_PairType) var.getType();
+
+        return pair.getFirst();
+    }
+
+    @Override
+    public WACC_Type visitPAIRSND(@NotNull PAIRSNDContext ctx) {
+        Variable var = currentST.lookUpAllVar(ctx.expr().getText());
+
+        if (var == null) {
+            semanticError("variable " + ctx.expr().getText() + " doesn't exit",
+                    ctx.expr().getStart().getLine(),
+                    ctx.expr().getStart().getCharPositionInLine());
+        }
+
+        if (!(var.getType() instanceof WACC_PairType)) {
+            semanticError(ctx.expr().getText() + " is not a pair",
+                    ctx.expr().getStart().getLine(),
+                    ctx.expr().getStart().getCharPositionInLine());
+        }
+
+        WACC_PairType pair = (WACC_PairType) var.getType();
+
+        return pair.getSecond();
+    }
+
+    // Types
+
     @Override
     public WACC_Type visitTYPEBASE(@NotNull TYPEBASEContext ctx) {
         if (ctx.BaseType().toString().equals("char")) {
@@ -322,6 +381,19 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         } else {
             return new WACC_BaseType(BaseType.STRING);
         }
+    }
+
+    @Override
+    public WACC_Type visitTYPEARRAY(@NotNull TYPEARRAYContext ctx) {
+        return new WACC_ArrayType(visit(ctx.type()));
+    }
+
+    @Override
+    public WACC_Type visitPairType(@NotNull PairTypeContext ctx) {
+        WACC_Type left = visit(ctx.pairElemType(0));
+        WACC_Type right = visit(ctx.pairElemType(1));
+
+        return new WACC_PairType(left, right);
     }
 
     // Expressions
@@ -425,26 +497,8 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
     }
 
     @Override
-    public WACC_Type visitPAIRFST(@NotNull PAIRFSTContext ctx) {
-        return visit(ctx.expr());
-    }
-
-    @Override
-    public WACC_Type visitPAIRSND(@NotNull PAIRSNDContext ctx) {
-        return visit(ctx.expr());
-    }
-
-    @Override
     public WACC_Type visitPAIRARRAYTYPE(@NotNull PAIRARRAYTYPEContext ctx) {
         return visit(ctx.type());
-    }
-
-    @Override
-    public WACC_Type visitPairType(@NotNull PairTypeContext ctx) {
-        WACC_Type left = visit(ctx.pairElemType(0));
-        WACC_Type right = visit(ctx.pairElemType(1));
-
-        return new WACC_PairType(left, right);
     }
 
     @Override
@@ -452,7 +506,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         Variable var = currentST.lookUpAllVar(ctx.Ident().getText());
         if (var == null) {
             semanticError("var " + ctx.Ident().getText()
-                    + " does not exist",
+                            + " does not exist",
                     ctx.Ident().getSymbol().getLine(),
                     ctx.Ident().getSymbol().getCharPositionInLine());
         }
@@ -480,14 +534,17 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
     @Override
     public WACC_Type visitArrayLiter(@NotNull ArrayLiterContext ctx) {
         if(ctx.expr(0) == null) return new WACC_ArrayType(null);
+
         WACC_Type fstType = visit(ctx.expr(0));
+
         for (int i = 1; i < ctx.expr().size(); i++) {
             if (!(fstType.checkType(visit(ctx.expr(i))))) {
-                semanticError("Different types in array at ",
+                semanticError("different types in array at ",
                         ctx.expr(i).getStop().getLine(),
                         ctx.expr(i).getStop().getCharPositionInLine());
             }
         }
+
         return fstType;
     }
 
