@@ -1,9 +1,6 @@
 package WACCSemantics;
 
-import WACCSemantics.types.BaseType;
-import WACCSemantics.types.WACC_BaseType;
-import WACCSemantics.types.WACC_Function;
-import WACCSemantics.types.WACC_Type;
+import WACCSemantics.types.*;
 import antlr.WACCParser;
 import antlr.WACCParser.*;
 import antlr.WACCParserBaseVisitor;
@@ -349,7 +346,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         }
 
 
-
+    return null;
 
 
 
