@@ -1,15 +1,11 @@
 package WACCSemantics;
 
 import WACCSemantics.types.*;
-import antlr.WACCParser;
 import antlr.WACCParser.*;
 import antlr.WACCParserBaseVisitor;
-import jdk.nashorn.internal.objects.annotations.Function;
 import org.antlr.v4.runtime.misc.NotNull;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 
 public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
@@ -61,31 +57,6 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitFunc(@NotNull FuncContext ctx) {
-//        // create a new symbol table with current table as parent
-//        currentST = new SymbolTable(currentST);
-//
-//        String funcName = ctx.Ident().getText();
-//        WACC_Type funcRetType = visit(ctx.type());
-//
-//        ArrayList<WACC_Type> funcParams = new ArrayList<WACC_Type>();
-//
-//        if (ctx.paramList() != null) {
-//            for (int i = 0; i < ctx.paramList().param().size(); i++) {
-//                funcParams.add(visit(ctx.paramList().param(i)));
-//            }
-//        }
-//
-//        if (!funcParams.isEmpty()) {
-//            currentST.getEncSymTable().addFunc(funcName, new WACC_Function(funcRetType, funcParams, currentST.getEncSymTable()));
-//        } else {
-//            currentST.getEncSymTable().addFunc(funcName, new WACC_Function(funcRetType, currentST.getEncSymTable()));
-//        }
-//
-//        // set current symbol table to parent
-//        WACC_Type statRetType = visit(ctx.stat());
-//
-//        currentST = currentST.getEncSymTable();\
-
         WACC_Type funcRetType = currentST.lookUpAllFunc(ctx.Ident().getText()).getReturnType();
 
         WACC_Type statRetType = visit(ctx.stat());
@@ -133,9 +104,6 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         WACC_Type varValue = visit(ctx.assignRhs());
         String varName = ctx.Ident().getText();
         Variable variable = new Variable(varType);
-
-        System.out.println(varValue);
-        System.out.println(varType);
 
         // check if we already declared the variable
         if ((currentST.lookUpAllVar(varName) != null)
@@ -481,10 +449,12 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
                 && !expr.checkType(new WACC_BaseType(BaseType.BOOL))) {
 
             unaryOperationError(operation, ctx, expr.toString());
-        } else if (!expr.checkType(new WACC_BaseType(BaseType.INT))
+        } else if ((!expr.checkType(new WACC_BaseType(BaseType.INT))
                 && (operation.equals("+") || operation.equals("-")
-                || operation.equals("len") || operation.equals("chr"))) {
+                 || operation.equals("chr")))) {
 
+            unaryOperationError(operation, ctx, expr.toString());
+        } else if (operation.equals("len") && !(expr instanceof WACC_ArrayType)) {
             unaryOperationError(operation, ctx, expr.toString());
         } else if (!expr.checkType(new WACC_BaseType(BaseType.CHAR))
                 && operation.equals("ord")) {
@@ -493,7 +463,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         }
 
         if (operation.equals("len") || operation.equals("ord")) return new WACC_BaseType(BaseType.INT);
-        if (operation.equals("ord")) return new WACC_BaseType(BaseType.CHAR);
+        if (operation.equals("chr")) return new WACC_BaseType(BaseType.CHAR);
 
         return expr;
     }
