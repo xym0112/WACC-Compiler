@@ -1,6 +1,7 @@
 package WACCSemantics;
 
 import WACCSemantics.types.*;
+import antlr.WACCParser;
 import antlr.WACCParser.*;
 import antlr.WACCParserBaseVisitor;
 import org.antlr.v4.runtime.misc.NotNull;
@@ -122,6 +123,11 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         variable.setDeclared(true);
         currentST.addVar(varName, variable);
         return null;
+    }
+
+    @Override
+    public WACC_Type visitRHSNEWPAIR(@NotNull RHSNEWPAIRContext ctx) {
+        return new WACC_PairType(visit(ctx.expr(0)), visit(ctx.expr(1)));
     }
 
     @Override
