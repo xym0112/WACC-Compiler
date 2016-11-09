@@ -7,6 +7,7 @@ import antlr.WACCParserBaseVisitor;
 import org.antlr.v4.runtime.misc.NotNull;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
@@ -81,9 +82,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         return paramType;
     }
 
-
-
-    //stats
+    // Statements
 
     @Override
     public WACC_Type visitRETURN(@NotNull RETURNContext ctx) {
@@ -92,8 +91,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitCREATEVAR(@NotNull CREATEVARContext ctx) {
-
-        WACC_Type  varType = visit(ctx.type());
+        WACC_Type varType = visit(ctx.type());
         WACC_Type varValue = visit(ctx.assignRhs());
         String varName = ctx.Ident().getText();
         Variable variable = new Variable(varType);
@@ -103,21 +101,21 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         // check if we already declared the variable
         if ((currentST.lookUpAllVar(varName) != null)
             && (currentST.lookUpAllVar(varName).isDeclared())) {
-            semanticError("Variable " + varName + " is assigned to an already declared variable",
+            semanticError("variable " + varName + " is assigned to an already declared variable",
                     ctx.Ident().getSymbol().getLine(),
                     ctx.Ident().getSymbol().getCharPositionInLine());
         }
 
-        // case if we added a nondeclared variable in symbolTable - This shouldnt happen ever.
+        // chck if we added a nondeclared variable in symbolTable
         if (currentST.lookUpAllVar(varName) != null) {
-            semanticError("Non declared variable " + varName + " found in Symbol Table.",
+            semanticError("non declared variable " + varName + " found in Symbol Table.",
                     ctx.Ident().getSymbol().getLine(),
                     ctx.Ident().getSymbol().getCharPositionInLine());
         }
 
         // check if the var's types conflict with the lhs
         if (!varType.checkType(varValue)){
-            semanticError("Variable " + varName + " is assigned to a value of different type",
+            semanticError("variable " + varName + " is assigned to a value of different type",
                 ctx.Ident().getSymbol().getLine(),
                 ctx.Ident().getSymbol().getCharPositionInLine());
         }
@@ -125,6 +123,42 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         variable.setDeclared(true);
         currentST.addVar(varName, variable);
         return null;
+    }
+
+    @Override
+    public WACC_Type visitRHSNEWPAIR(@NotNull RHSNEWPAIRContext ctx) {
+        return new WACC_PairType(visit(ctx.expr(0)), visit(ctx.expr(1)));
+    }
+
+    @Override
+    public WACC_Type visitRHSCALLFUNC(@NotNull RHSCALLFUNCContext ctx) {
+        String funcName = ctx.Ident().getText();
+        WACC_Function function = currentST.lookUpAllFunc(funcName);
+
+        if (function == null) {
+            semanticError(" function " + funcName + " not defined",
+                    ctx.Ident().getSymbol().getLine(),
+                    ctx.Ident().getSymbol().getCharPositionInLine());
+        }
+
+        ArgListContext args = ctx.argList();
+        ArrayList<WACC_Type> argList = new ArrayList<WACC_Type>();
+
+        if (args != null) {
+            for (ExprContext arg : args.expr()) {
+                argList.add(visit(arg));
+            }
+        }
+
+        Collections.reverse(argList);
+
+        if (!argList.equals(function.getParameters())) {
+            semanticError(" arguments do not match function " + funcName,
+                    ctx.argList().getStart().getLine(),
+                    ctx.argList().getStart().getCharPositionInLine());
+        }
+
+        return function.getReturnType();
     }
 
     @Override
@@ -148,26 +182,54 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitSEQUENCE(@NotNull SEQUENCEContext ctx) {
-        WACC_Type fststat = visit(ctx.stat(0));
-        WACC_Type sndstat = visit(ctx.stat(1));
-        if ((fststat == null)) {
-            return sndstat;
+        WACC_Type fstStat = visit(ctx.stat(0));
+        WACC_Type sndStat = visit(ctx.stat(1));
+        if ((fstStat == null)) {
+            return sndStat;
         } else {
-            // if sndstat isnt null, then our syntax checker is wrong, so its fine to assume that sndstat is null
-            assert(sndstat == null);
-            return fststat;
+            // TODO: sAssuming syntax is correct allows us to assume that sndstat is null
+            assert(sndStat == null);
+            return fstStat;
         }
 
     }
-    //assignRhs
+
+    @Override
+    public WACC_Type visitIF(@NotNull IFContext ctx) {
+        WACC_Type cond = visit(ctx.expr());
+
+        if (!(cond.checkType(new WACC_BaseType(BaseType.BOOL)))) {
+            semanticError(" condition of if statement evaluate to type bool ",
+                    ctx.expr().getStart().getLine(),
+                    ctx.expr().getStart().getCharPositionInLine());
+        }
+
+        visit(ctx.stat(0));
+        visit(ctx.stat(1));
+
+        return null;
+    }
+
+    @Override
+    public WACC_Type visitWHILE(@NotNull WHILEContext ctx) {
+        WACC_Type cond = visit(ctx.expr());
+
+        if (!(cond.checkType(new WACC_BaseType(BaseType.BOOL)))) {
+            semanticError(" condition of while statement evaluate to type bool ",
+                    ctx.expr().getStart().getLine(),
+                    ctx.expr().getStart().getCharPositionInLine());
+        }
+
+        visit(ctx.stat());
+
+        return null;
+    }
 
     @Override
     public WACC_Type visitRHSEXPR(@NotNull RHSEXPRContext ctx) {
         return visit(ctx.expr());
     }
 
-
-    //type
 
     @Override
     public WACC_Type visitTYPEBASE(@NotNull TYPEBASEContext ctx) {
@@ -183,7 +245,6 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
     }
 
     // Expressions
-
 
     @Override
     public WACC_Type visitUNSIGNED(@NotNull UNSIGNEDContext ctx) {
@@ -323,10 +384,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
                     ctx.Ident().getSymbol().getCharPositionInLine());
         }
 
-
-
         for (ExprContext expr : ctx.expr()) {
-            WACC_ArrayType array = (WACC_ArrayType) var.getType();
             WACC_Type type = visit(expr);
             if (!(type.checkType(new WACC_BaseType(BaseType.INT)))) {
                 semanticError(expr.getText()
@@ -334,22 +392,9 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
                         expr.getStop().getLine(),
                         expr.getStop().getCharPositionInLine());
             }
-
-            if (!(String.valueOf(array.getSize()).equals(expr.getText()))) {
-                semanticError(expr.getText()
-                                + " should be " + array.getSize(),
-                        expr.getStop().getLine(),
-                        expr.getStop().getCharPositionInLine());
-            }
-
-            visit(expr);
         }
 
-
-    return null;
-
-
-
+        return var.getType();
     }
 
     private void unaryOperationError(String operation, UNARYOPContext ctx, String type) {

@@ -30,4 +30,8 @@ public class WACC_Function {
     public String toString() {
         return returnType.toString();
     }
+
+    public ArrayList<WACC_Type> getParameters() {
+        return parameters;
+    }
 }
