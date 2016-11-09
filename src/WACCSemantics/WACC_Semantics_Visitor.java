@@ -9,6 +9,8 @@ import org.antlr.v4.runtime.misc.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 
+//TODO fix arrayliter, exit, skip, assign, read,free,return,print,println, pairelem
+
 public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     SymbolTable currentST;
@@ -96,7 +98,6 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         String varName = ctx.Ident().getText();
         Variable variable = new Variable(varType);
 
-        //TODO TESTING FOR DIFFERENT TYPES;
 
         // check if we already declared the variable
         if ((currentST.lookUpAllVar(varName) != null)
@@ -125,41 +126,6 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         return null;
     }
 
-    @Override
-    public WACC_Type visitRHSNEWPAIR(@NotNull RHSNEWPAIRContext ctx) {
-        return new WACC_PairType(visit(ctx.expr(0)), visit(ctx.expr(1)));
-    }
-
-    @Override
-    public WACC_Type visitRHSCALLFUNC(@NotNull RHSCALLFUNCContext ctx) {
-        String funcName = ctx.Ident().getText();
-        WACC_Function function = currentST.lookUpAllFunc(funcName);
-
-        if (function == null) {
-            semanticError(" function " + funcName + " not defined",
-                    ctx.Ident().getSymbol().getLine(),
-                    ctx.Ident().getSymbol().getCharPositionInLine());
-        }
-
-        ArgListContext args = ctx.argList();
-        ArrayList<WACC_Type> argList = new ArrayList<WACC_Type>();
-
-        if (args != null) {
-            for (ExprContext arg : args.expr()) {
-                argList.add(visit(arg));
-            }
-        }
-
-        Collections.reverse(argList);
-
-        if (!argList.equals(function.getParameters())) {
-            semanticError(" arguments do not match function " + funcName,
-                    ctx.argList().getStart().getLine(),
-                    ctx.argList().getStart().getCharPositionInLine());
-        }
-
-        return function.getReturnType();
-    }
 
     @Override
     public WACC_Type visitASSIGNVAR(@NotNull ASSIGNVARContext ctx) {
@@ -204,10 +170,18 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
                     ctx.expr().getStart().getCharPositionInLine());
         }
 
-        visit(ctx.stat(0));
-        visit(ctx.stat(1));
+        currentST = new SymbolTable(currentST);
+        WACC_Type ifType = visit(ctx.stat(0));
+        currentST = currentST.getEncSymTable();
+        currentST = new SymbolTable(currentST);
+        WACC_Type fiType = visit(ctx.stat(1));
+        currentST = currentST.getEncSymTable();
 
-        return null;
+        if (ifType == null) {
+            return fiType;
+        } else {
+            return ifType;
+        }
     }
 
     @Override
@@ -220,16 +194,55 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
                     ctx.expr().getStart().getCharPositionInLine());
         }
 
-        visit(ctx.stat());
+        currentST = new SymbolTable(currentST);
+        WACC_Type innerType = visit(ctx.stat());
+        currentST = currentST.getEncSymTable();
 
-        return null;
+        return innerType;
     }
+
+
 
     @Override
     public WACC_Type visitRHSEXPR(@NotNull RHSEXPRContext ctx) {
         return visit(ctx.expr());
     }
 
+    @Override
+    public WACC_Type visitRHSNEWPAIR(@NotNull RHSNEWPAIRContext ctx) {
+        return new WACC_PairType(visit(ctx.expr(0)), visit(ctx.expr(1)));
+    }
+
+    @Override
+    public WACC_Type visitRHSCALLFUNC(@NotNull RHSCALLFUNCContext ctx) {
+        String funcName = ctx.Ident().getText();
+        WACC_Function function = currentST.lookUpAllFunc(funcName);
+
+        if (function == null) {
+            semanticError(" function " + funcName + " not defined",
+                    ctx.Ident().getSymbol().getLine(),
+                    ctx.Ident().getSymbol().getCharPositionInLine());
+        }
+
+        ArgListContext args = ctx.argList();
+        ArrayList<WACC_Type> argList = new ArrayList<WACC_Type>();
+
+        if (args != null) {
+            for (ExprContext arg : args.expr()) {
+                argList.add(visit(arg));
+            }
+        }
+
+        Collections.reverse(argList);
+
+        if (!argList.equals(function.getParameters())) {
+            semanticError(" arguments do not match function " + funcName,
+                    ctx.argList().getStart().getLine(),
+                    ctx.argList().getStart().getCharPositionInLine());
+        }
+
+        return function.getReturnType();
+    }
 
     @Override
     public WACC_Type visitTYPEBASE(@NotNull TYPEBASEContext ctx) {
