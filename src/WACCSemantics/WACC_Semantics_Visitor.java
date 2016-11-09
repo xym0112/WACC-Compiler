@@ -9,7 +9,7 @@ import org.antlr.v4.runtime.misc.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 
-//TODO exit, skip, assign, read,free,return,print,println, pairelem
+//TODO pairelem
 
 public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
@@ -174,6 +174,8 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
         // check if the var's types conflict with the lhs
         if (!varType.checkType(varValue)){
+            System.out.println(varType);
+            System.out.println(varValue);
             semanticError("variable " + varName + " is assigned to a value of different type",
                 ctx.Ident().getSymbol().getLine(),
                 ctx.Ident().getSymbol().getCharPositionInLine());
@@ -190,7 +192,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         WACC_Type lhs = visit(ctx.assignLhs());
         WACC_Type rhs = visit(ctx.assignRhs());
         if (!(lhs.checkType(rhs))) {
-            semanticError("Variable assigned to wron type at ",
+            semanticError("Variable assigned to wrong type at ",
                     ctx.ASSIGN().getSymbol().getLine(),
                     ctx.ASSIGN().getSymbol().getCharPositionInLine());
         }
@@ -486,7 +488,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
                         ctx.expr(i).getStop().getCharPositionInLine());
             }
         }
-
+        return fstType;
     }
 
     private void unaryOperationError(String operation, UNARYOPContext ctx, String type) {
