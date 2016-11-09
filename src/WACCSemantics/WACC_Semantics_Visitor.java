@@ -1,12 +1,12 @@
 package WACCSemantics;
 
 import WACCSemantics.types.*;
-import antlr.WACCParser;
 import antlr.WACCParser.*;
 import antlr.WACCParserBaseVisitor;
 import org.antlr.v4.runtime.misc.NotNull;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
@@ -100,21 +100,21 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         // check if we already declared the variable
         if ((currentST.lookUpAllVar(varName) != null)
             && (currentST.lookUpAllVar(varName).isDeclared())) {
-            semanticError("Variable " + varName + " is assigned to an already declared variable",
+            semanticError("variable " + varName + " is assigned to an already declared variable",
                     ctx.Ident().getSymbol().getLine(),
                     ctx.Ident().getSymbol().getCharPositionInLine());
         }
 
-        // case if we added a nondeclared variable in symbolTable - This shouldnt happen ever.
+        // chck if we added a nondeclared variable in symbolTable
         if (currentST.lookUpAllVar(varName) != null) {
-            semanticError("Non declared variable " + varName + " found in Symbol Table.",
+            semanticError("non declared variable " + varName + " found in Symbol Table.",
                     ctx.Ident().getSymbol().getLine(),
                     ctx.Ident().getSymbol().getCharPositionInLine());
         }
 
         // check if the var's types conflict with the lhs
         if (!varType.checkType(varValue)){
-            semanticError("Variable " + varName + " is assigned to a value of different type",
+            semanticError("variable " + varName + " is assigned to a value of different type",
                 ctx.Ident().getSymbol().getLine(),
                 ctx.Ident().getSymbol().getCharPositionInLine());
         }
@@ -122,6 +122,37 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         variable.setDeclared(true);
         currentST.addVar(varName, variable);
         return null;
+    }
+
+    @Override
+    public WACC_Type visitRHSCALLFUNC(@NotNull RHSCALLFUNCContext ctx) {
+        String funcName = ctx.Ident().getText();
+        WACC_Function function = currentST.lookUpAllFunc(funcName);
+
+        if (function == null) {
+            semanticError(" function " + funcName + " not defined",
+                    ctx.Ident().getSymbol().getLine(),
+                    ctx.Ident().getSymbol().getCharPositionInLine());
+        }
+
+        ArgListContext args = ctx.argList();
+        ArrayList<WACC_Type> argList = new ArrayList<WACC_Type>();
+
+        if (args != null) {
+            for (ExprContext arg : args.expr()) {
+                argList.add(visit(arg));
+            }
+        }
+
+        Collections.reverse(argList);
+
+        if (!argList.equals(function.getParameters())) {
+            semanticError(" arguments do not match function " + funcName,
+                    ctx.argList().getStart().getLine(),
+                    ctx.argList().getStart().getCharPositionInLine());
+        }
+
+        return function.getReturnType();
     }
 
     @Override
@@ -145,14 +176,14 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitSEQUENCE(@NotNull SEQUENCEContext ctx) {
-        WACC_Type fststat = visit(ctx.stat(0));
-        WACC_Type sndstat = visit(ctx.stat(1));
-        if ((fststat == null)) {
-            return sndstat;
+        WACC_Type fstStat = visit(ctx.stat(0));
+        WACC_Type sndStat = visit(ctx.stat(1));
+        if ((fstStat == null)) {
+            return sndStat;
         } else {
-            // if sndstat isnt null, then our syntax checker is wrong, so its fine to assume that sndstat is null
-            assert(sndstat == null);
-            return fststat;
+            // TODO: sAssuming syntax is correct allows us to assume that sndstat is null
+            assert(sndStat == null);
+            return fstStat;
         }
 
     }
