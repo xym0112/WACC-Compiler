@@ -1,10 +1,6 @@
 package WACCSemantics;
 
-import WACCSemantics.types.BaseType;
-import WACCSemantics.types.WACC_BaseType;
-import WACCSemantics.types.WACC_Function;
-import WACCSemantics.types.WACC_Type;
-import antlr.WACCParser;
+import WACCSemantics.types.*;
 import antlr.WACCParser.*;
 import antlr.WACCParserBaseVisitor;
 import org.antlr.v4.runtime.misc.NotNull;
@@ -84,10 +80,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         return paramType;
     }
 
-
-
-    //stats
-
+    // Statements
     @Override
     public WACC_Type visitRETURN(@NotNull RETURNContext ctx) {
         return visit(ctx.expr());
@@ -95,8 +88,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitCREATEVAR(@NotNull CREATEVARContext ctx) {
-
-        WACC_Type  varType = visit(ctx.type());
+        WACC_Type varType = visit(ctx.type());
         WACC_Type varValue = visit(ctx.assignRhs());
         String varName = ctx.Ident().getText();
         Variable variable = new Variable(varType);
@@ -326,10 +318,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
                     ctx.Ident().getSymbol().getCharPositionInLine());
         }
 
-
-
         for (ExprContext expr : ctx.expr()) {
-            WACC_ArrayType array = (WACC_ArrayType) var.getType();
             WACC_Type type = visit(expr);
             if (!(type.checkType(new WACC_BaseType(BaseType.INT)))) {
                 semanticError(expr.getText()
@@ -337,22 +326,9 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
                         expr.getStop().getLine(),
                         expr.getStop().getCharPositionInLine());
             }
-
-            if (!(String.valueOf(array.getSize()).equals(expr.getText()))) {
-                semanticError(expr.getText()
-                                + " should be " + array.getSize(),
-                        expr.getStop().getLine(),
-                        expr.getStop().getCharPositionInLine());
-            }
-
-            visit(expr);
         }
 
-
-
-
-
-
+        return var.getType();
     }
 
     private void unaryOperationError(String operation, UNARYOPContext ctx, String type) {
