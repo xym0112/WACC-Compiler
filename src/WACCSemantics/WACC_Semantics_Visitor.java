@@ -1,6 +1,7 @@
 package WACCSemantics;
 
 import WACCSemantics.types.*;
+import antlr.WACCParser;
 import antlr.WACCParser.*;
 import antlr.WACCParserBaseVisitor;
 import org.antlr.v4.runtime.misc.NotNull;
@@ -81,6 +82,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
     }
 
     // Statements
+
     @Override
     public WACC_Type visitRETURN(@NotNull RETURNContext ctx) {
         return visit(ctx.expr());
@@ -154,15 +156,43 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         }
 
     }
-    //assignRhs
+
+    @Override
+    public WACC_Type visitIF(@NotNull IFContext ctx) {
+        WACC_Type cond = visit(ctx.expr());
+
+        if (!(cond.checkType(new WACC_BaseType(BaseType.BOOL)))) {
+            semanticError(" condition of if statement evaluate to type bool ",
+                    ctx.expr().getStart().getLine(),
+                    ctx.expr().getStart().getCharPositionInLine());
+        }
+
+        visit(ctx.stat(0));
+        visit(ctx.stat(1));
+
+        return null;
+    }
+
+    @Override
+    public WACC_Type visitWHILE(@NotNull WHILEContext ctx) {
+        WACC_Type cond = visit(ctx.expr());
+
+        if (!(cond.checkType(new WACC_BaseType(BaseType.BOOL)))) {
+            semanticError(" condition of while statement evaluate to type bool ",
+                    ctx.expr().getStart().getLine(),
+                    ctx.expr().getStart().getCharPositionInLine());
+        }
+
+        visit(ctx.stat());
+
+        return null;
+    }
 
     @Override
     public WACC_Type visitRHSEXPR(@NotNull RHSEXPRContext ctx) {
         return visit(ctx.expr());
     }
 
-
-    //type
 
     @Override
     public WACC_Type visitTYPEBASE(@NotNull TYPEBASEContext ctx) {
@@ -178,7 +208,6 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
     }
 
     // Expressions
-
 
     @Override
     public WACC_Type visitUNSIGNED(@NotNull UNSIGNEDContext ctx) {
