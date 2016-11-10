@@ -5,5 +5,5 @@ public enum BaseType {
     CHAR,
     BOOL,
     STRING,
-    NULL
+    ANY
 }

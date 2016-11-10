@@ -24,6 +24,11 @@ public class WACC_ArrayType implements WACC_Type {
 
     @Override
     public boolean checkType(WACC_Type ident) {
+
+        if (ident instanceof WACC_BaseType){
+            if(((WACC_BaseType) ident).checkType(new WACC_BaseType(BaseType.ANY)))
+                return true;
+        }
         if (!(ident instanceof WACC_ArrayType)) return false;
 
         WACC_ArrayType identArrayType = (WACC_ArrayType) ident;

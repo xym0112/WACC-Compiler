@@ -1,12 +1,12 @@
 package WACCSemantics;
 
 import WACCSemantics.types.*;
-import antlr.WACCParser;
 import antlr.WACCParser.*;
 import antlr.WACCParserBaseVisitor;
 import org.antlr.v4.runtime.misc.NotNull;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
@@ -105,6 +105,10 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         WACC_Type varValue = visit(ctx.assignRhs());
         String varName = ctx.Ident().getText();
         Variable variable = new Variable(varType);
+
+//        System.out.println();
+//        System.out.println(varType);
+//        System.out.println(varValue);
 
         // check if we already declared the variable
         if ((currentST.lookUpAllVar(varName) != null)
@@ -295,11 +299,25 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
             }
         }
 
-        if (!argList.equals(function.getParameters())) {
-            semanticError(" arguments do not match function " + funcName,
-                    ctx.argList().getStart().getLine(),
-                    ctx.argList().getStart().getCharPositionInLine());
+        Iterator<WACC_Type> argListIter = argList.iterator();
+        Iterator<WACC_Type> funcIterator = function.getParameters().iterator();
+        while(argListIter.hasNext() && funcIterator.hasNext()) {
+
+            if((argListIter.hasNext() && !funcIterator.hasNext())
+                    || (!argListIter.hasNext() && funcIterator.hasNext()) ) {
+                semanticError(" incorrect amount of arguments " + funcName,
+                        ctx.argList().getStart().getLine(),
+                        ctx.argList().getStart().getCharPositionInLine());
+            }
+
+            if (!argListIter.next().checkType(funcIterator.next())){
+                semanticError(" arguments do not match function " + funcName,
+                        ctx.argList().getStart().getLine(),
+                        ctx.argList().getStart().getCharPositionInLine());
+
+            }
         }
+
 
         return function.getReturnType();
     }
@@ -344,7 +362,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitPAIRPAIR(@NotNull PAIRPAIRContext ctx) {
-        return null;
+        return new WACC_PairType();
     }
 
     @Override
@@ -429,7 +447,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitPAIRLITER(@NotNull PAIRLITERContext ctx) {
-        return new WACC_BaseType(BaseType.NULL);
+        return new WACC_PairType();
     }
 
     @Override

@@ -14,11 +14,20 @@ public class WACC_BaseType implements WACC_Type {
     @Override
     public boolean checkType(WACC_Type ident) {
 
+
         // TODO: consider strings
+
+        if (type == BaseType.ANY){
+            return true;
+        }
 
         if (!(ident instanceof WACC_BaseType)) return false;
 
         WACC_BaseType identBaseType = (WACC_BaseType) ident;
+
+        if (identBaseType.getType() == BaseType.ANY)
+            return true;
+
         return identBaseType.getType().equals(this.type);
     }
 
