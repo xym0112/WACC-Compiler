@@ -257,13 +257,20 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
     public WACC_Type visitSEQUENCE(@NotNull SEQUENCEContext ctx) {
         WACC_Type fstStat = visit(ctx.stat(0));
         WACC_Type sndStat = visit(ctx.stat(1));
-        if ((fstStat == null)) {
-            return sndStat;
-        } else {
-            // TODO: sAssuming syntax is correct allows us to assume that sndstat is null
-            assert (sndStat == null);
-            return fstStat;
+
+        if (sndStat != null && fstStat != null) {
+            if (!fstStat.checkType(sndStat)) {
+                semanticError("conflicting return types",
+                        ctx.stat(0).getStart().getLine(),
+                        ctx.stat(0).getStart().getCharPositionInLine());
+            }
+        } else if (fstStat != null) {
+            semanticError("return must be the last statement",
+                    ctx.stat(0).getStart().getLine(),
+                    ctx.stat(0).getStart().getCharPositionInLine());
         }
+
+        return sndStat;
     }
 
     // Assign RHS
