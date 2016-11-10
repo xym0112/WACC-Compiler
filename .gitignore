@@ -11,4 +11,6 @@ src/antlr/
 
 wacc_40.iml
 
-out
+out/
+
+src/TestWACC.wacc
