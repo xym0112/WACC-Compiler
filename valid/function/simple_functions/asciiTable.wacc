@@ -124,7 +124,7 @@ begin
     print n ;
     print " = " ;
     print chr n ;
-    println "  |" ;
+    println "  |" ; 
     return true
   end
 

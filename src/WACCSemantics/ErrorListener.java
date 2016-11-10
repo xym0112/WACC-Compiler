@@ -7,8 +7,9 @@ import org.antlr.v4.runtime.misc.Nullable;
 public class ErrorListener extends ConsoleErrorListener {
     @Override
     public void syntaxError(@NotNull Recognizer<?, ?> recognizer, @Nullable Object offendingSymbol, int line, int charPositionInLine, @NotNull String msg, @Nullable RecognitionException e) {
-        underlineError(recognizer,(Token)offendingSymbol,
-                line, charPositionInLine);
+//        underlineError(recognizer,(Token)offendingSymbol,
+//                line, charPositionInLine);
+        System.err.println("Syntax error at line " + line + " and position " + charPositionInLine + ":");
         System.exit(100);
     }
 

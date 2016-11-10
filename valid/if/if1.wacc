@@ -6,11 +6,11 @@
 # Program:
 
 begin
-  int a = 13;
-  if a == 13
-   then
+  int a = 13;	
+  if a == 13 
+  then 
     println "correct"
-  else
+  else 
     println "incorrect"
   fi
 end

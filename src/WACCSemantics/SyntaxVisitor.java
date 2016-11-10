@@ -4,136 +4,177 @@ import antlr.WACCParser;
 import antlr.WACCParserBaseVisitor;
 import org.antlr.v4.runtime.misc.NotNull;
 
-import java.math.BigInteger;
+enum RETURNTYPE {
+    RETURN,
+    EXIT,
+    NONE
+}
 
-public class SyntaxVisitor extends WACCParserBaseVisitor<Boolean>{
+public class SyntaxVisitor extends WACCParserBaseVisitor<RETURNTYPE> {
 
     private String functionName = null;
-    private final double MAXINT = Math.pow(31, 2) - 1;
-    private final double MININT = - Math.pow(31, 2);
+    private final long MAXINT = 2147483647;
+
 
     @Override
-    public Boolean visitProg(@NotNull WACCParser.ProgContext ctx) {
-
+    public RETURNTYPE visitProg(@NotNull WACCParser.ProgContext ctx) {
         //Checking if no return statement is passed in main
-        Boolean result = visit(ctx.stat());
+        RETURNTYPE result = visit(ctx.stat());
 
-        if (result) {
-            printSyntaxError("return statement passed in Main Function");
+        if (result == RETURNTYPE.RETURN) {
+            printSyntaxError("return statement passed in Main Function",
+                    ctx.stat().getStop().getLine(),
+                    ctx.stat().getStop().getCharPositionInLine());
         }
 
         for (WACCParser.FuncContext func: ctx.func()){
             visit(func);
         }
 
-        return true;
+        return RETURNTYPE.NONE;
     }
 
 
     @Override
-    public Boolean visitFunc(@NotNull WACCParser.FuncContext ctx) {
+    public RETURNTYPE visitFunc(@NotNull WACCParser.FuncContext ctx) {
 
         functionName = ctx.Ident().getText();
-        Boolean result = visit(ctx.stat());
-        if (!result){
-            printSyntaxError("return statement missing in Function '" + functionName + "'");
+        RETURNTYPE result = visit(ctx.stat());
+        if (!(result == RETURNTYPE.RETURN || result == RETURNTYPE.EXIT)){
+            printSyntaxError("return statement missing in Function '" + functionName + "'",
+                    ctx.Ident().getSymbol().getLine(),
+                    ctx.Ident().getSymbol().getCharPositionInLine());
         }
-        return true;
+        return RETURNTYPE.NONE;
     }
 
     // Statements
 
     @Override
-    public Boolean visitSKIPSTAT(@NotNull WACCParser.SKIPSTATContext ctx) {
-        return false;
+    public RETURNTYPE visitSKIPSTAT(@NotNull WACCParser.SKIPSTATContext ctx) {
+        return RETURNTYPE.NONE;
     }
 
     @Override
-    public Boolean visitEXIT(@NotNull WACCParser.EXITContext ctx) {
+    public RETURNTYPE visitEXIT(@NotNull WACCParser.EXITContext ctx) {
         visitChildren(ctx);
-        return true;
+        return RETURNTYPE.EXIT;
     }
 
     @Override
-    public Boolean visitCREATEVAR(@NotNull WACCParser.CREATEVARContext ctx) {
+    public RETURNTYPE visitCREATEVAR(@NotNull WACCParser.CREATEVARContext ctx) {
         visitChildren(ctx);
-        return false;
+        return RETURNTYPE.NONE;
     }
 
     @Override
-    public Boolean visitASSIGNVAR(@NotNull WACCParser.ASSIGNVARContext ctx) {
+    public RETURNTYPE visitASSIGNVAR(@NotNull WACCParser.ASSIGNVARContext ctx) {
         visitChildren(ctx);
-        return false;
+        return RETURNTYPE.NONE;
     }
 
     @Override
-    public Boolean visitREAD(@NotNull WACCParser.READContext ctx) {
+    public RETURNTYPE visitREAD(@NotNull WACCParser.READContext ctx) {
         visitChildren(ctx);
-        return false;
+        return RETURNTYPE.NONE;
     }
 
     @Override
-    public Boolean visitFREE(@NotNull WACCParser.FREEContext ctx) {
+    public RETURNTYPE visitFREE(@NotNull WACCParser.FREEContext ctx) {
         visitChildren(ctx);
-        return false;
+        return RETURNTYPE.NONE;
     }
 
     @Override
-    public Boolean visitRETURN(@NotNull WACCParser.RETURNContext ctx) {
-        return true;
+    public RETURNTYPE visitRETURN(@NotNull WACCParser.RETURNContext ctx) {
+        return RETURNTYPE.RETURN;
     }
 
     @Override
-    public Boolean visitPRINT(@NotNull WACCParser.PRINTContext ctx) {
+    public RETURNTYPE visitPRINT(@NotNull WACCParser.PRINTContext ctx) {
         visitChildren(ctx);
-        return false;
+        return RETURNTYPE.NONE;
     }
 
     @Override
-    public Boolean visitPRINTLN(@NotNull WACCParser.PRINTLNContext ctx) {
+    public RETURNTYPE visitPRINTLN(@NotNull WACCParser.PRINTLNContext ctx) {
         visitChildren(ctx);
-        return false;
+        return RETURNTYPE.NONE;
     }
 
     @Override
-    public Boolean visitIF(@NotNull WACCParser.IFContext ctx) {
-        return visit(ctx.stat(0)) && visit(ctx.stat(1));
+    public RETURNTYPE visitIF(@NotNull WACCParser.IFContext ctx) {
+        RETURNTYPE expr1 = visit(ctx.stat(0));
+        RETURNTYPE expr2 = visit(ctx.stat(1));
+
+        if (expr1 == RETURNTYPE.NONE) {
+            return RETURNTYPE.NONE;
+        } else if (expr2 == RETURNTYPE.NONE) {
+            return RETURNTYPE.NONE;
+        } else {
+            return RETURNTYPE.RETURN;
+        }
     }
 
     @Override
-    public Boolean visitWHILE(@NotNull WACCParser.WHILEContext ctx) {
+    public RETURNTYPE visitWHILE(@NotNull WACCParser.WHILEContext ctx) {
         return visit(ctx.stat());
     }
 
     @Override
-    public Boolean visitBEGIN(@NotNull WACCParser.BEGINContext ctx) {
+    public RETURNTYPE visitBEGIN(@NotNull WACCParser.BEGINContext ctx) {
         return visit(ctx.stat());
     }
 
     @Override
-    public Boolean visitSEQUENCE(@NotNull WACCParser.SEQUENCEContext ctx) {
-        if (visit(ctx.stat(0))){
-            printSyntaxError("cannot Implement code after Return statement in Function '" +  functionName + "'");
+    public RETURNTYPE visitSEQUENCE(@NotNull WACCParser.SEQUENCEContext ctx) {
+        RETURNTYPE expr = visit(ctx.stat(0));
+        RETURNTYPE expr2 = visit(ctx.stat(1));
+
+        if (expr == RETURNTYPE.RETURN){
+            printSyntaxError("cannot implement code after Return statement in Function '" +  functionName + "'",
+                    ctx.stat(0).getStop().getLine(),
+                    ctx.stat(0).getStop().getCharPositionInLine());
         }
 
-        return visit(ctx.stat(1));
+        return expr2;
+    }
+
+    @Override
+    public RETURNTYPE visitUNARYOP(@NotNull WACCParser.UNARYOPContext ctx) {
+        if (ctx.unaryOper().getText().equals("-") && ctx.expr() instanceof WACCParser.UNSIGNEDContext) {
+            long intVal = Long.parseLong(ctx.expr().getText());
+
+            if (intVal > MAXINT + 1) {
+                printSyntaxError("this integer must be between -2^31 and 2^31 + 1",
+                        ctx.unaryOper().getStop().getLine(),
+                        ctx.unaryOper().getStop().getCharPositionInLine());
+            }
+        }
+
+        return RETURNTYPE.NONE;
     }
 
     // Big int assignment
 
     @Override
-    public Boolean visitUNSIGNED(@NotNull WACCParser.UNSIGNEDContext ctx) {
-        double intVal = Double.parseDouble(ctx.UNSIGNED().getText());
+    public RETURNTYPE visitUNSIGNED(@NotNull WACCParser.UNSIGNEDContext ctx) {
+        if (ctx.getParent() instanceof WACCParser.UNARYOPContext) return RETURNTYPE.NONE;
 
-        if (intVal > MAXINT || intVal < MININT) {
-            printSyntaxError("this integermust be between -2^31 and 2^31 + 1");
+        long intVal = Long.parseLong(ctx.UNSIGNED().getText());
+
+        if (intVal > MAXINT) {
+            printSyntaxError("this integer must be between -2^31 and 2^31 + 1",
+                    ctx.UNSIGNED().getSymbol().getLine(),
+                    ctx.UNSIGNED().getSymbol().getCharPositionInLine());
         }
 
-        return super.visitUNSIGNED(ctx);
+        return RETURNTYPE.NONE;
     }
 
-    private void printSyntaxError(String msg) {
-        System.out.println("Syntax error: " + msg);
+    private void printSyntaxError(String msg, int line, int pos) {
+        System.out.println("Syntax error: " + msg + " at line " + line + " and position " + pos);
         System.exit(100);
     }
 }
+
