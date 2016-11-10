@@ -28,9 +28,6 @@ public class WACC_ArrayType implements WACC_Type {
         if (ident instanceof WACC_BaseType){
             if(ident.checkType(new WACC_BaseType(BaseType.ANY)))
                 return true;
-//            if (((WACC_BaseType) ident).checkType(new WACC_BaseType(BaseType.STRING))
-//                    && this.getType().checkType(new WACC_BaseType(BaseType.CHAR)))
-//                return true;
         }
         if (!(ident instanceof WACC_ArrayType)) return false;
 

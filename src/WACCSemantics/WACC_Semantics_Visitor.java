@@ -63,6 +63,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         WACC_Type statRetType = visit(ctx.stat());
 
         if (!funcRetType.checkType(statRetType)) {
+
             semanticError("Function " + ctx.Ident().getText() + " has conflicting return types",
                     ctx.Ident().getSymbol().getLine(),
                     ctx.Ident().getSymbol().getCharPositionInLine());
@@ -96,7 +97,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
                     ctx.expr().getStop().getCharPositionInLine());
         }
 
-        return null;
+        return new WACC_BaseType(BaseType.ANY);
     }
 
     @Override
@@ -164,10 +165,6 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
     @Override
     public WACC_Type visitFREE(@NotNull FREEContext ctx) {
         WACC_Type exprType = visit(ctx.expr());
-
-//        System.out.println();
-//        System.out.println(exprType);
-//        System.out.println((exprType instanceof WACC_PairType));
 
         if(!((exprType instanceof WACC_ArrayType)
                 || (exprType instanceof WACC_PairType)) ){
