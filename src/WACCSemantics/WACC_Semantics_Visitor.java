@@ -1,7 +1,6 @@
 package WACCSemantics;
 
 import WACCSemantics.types.*;
-import antlr.WACCParser;
 import antlr.WACCParser.*;
 import antlr.WACCParserBaseVisitor;
 import org.antlr.v4.runtime.misc.NotNull;

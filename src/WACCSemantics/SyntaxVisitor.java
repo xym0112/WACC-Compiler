@@ -19,12 +19,7 @@ public class SyntaxVisitor extends WACCParserBaseVisitor<RETURNTYPE> {
     @Override
     public RETURNTYPE visitProg(@NotNull WACCParser.ProgContext ctx) {
         //Checking if no return statement is passed in main
-        RETURNTYPE result = visit(ctx.stat());
-
-        if (result == RETURNTYPE.RETURN) {
-            System.out.println("Global return not Supported");
-            System.exit(100);
-        }
+        visit(ctx.stat());
 
         for (WACCParser.FuncContext func: ctx.func()){
             visit(func);
@@ -129,6 +124,12 @@ public class SyntaxVisitor extends WACCParserBaseVisitor<RETURNTYPE> {
     public RETURNTYPE visitSEQUENCE(@NotNull WACCParser.SEQUENCEContext ctx) {
         RETURNTYPE expr = visit(ctx.stat(0));
         RETURNTYPE expr2 = visit(ctx.stat(1));
+
+        if ((ctx.getParent() instanceof WACCParser.ProgContext) && expr == RETURNTYPE.RETURN) {
+            System.out.println("Semantic error: return statement cannot be in main on line "
+                    + ctx.stat(1).getStop().getText() + " and position " + ctx.stat(1).getStop().getText() );
+            System.exit(200);
+        }
 
         if (expr == RETURNTYPE.RETURN){
             printSyntaxError("cannot implement code after Return statement in Function '" +  functionName + "'",
