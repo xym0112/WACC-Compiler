@@ -258,17 +258,17 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         WACC_Type fstStat = visit(ctx.stat(0));
         WACC_Type sndStat = visit(ctx.stat(1));
 
-        if (sndStat != null && fstStat != null) {
-            if (!fstStat.checkType(sndStat)) {
-                semanticError("conflicting return types",
-                        ctx.stat(0).getStart().getLine(),
-                        ctx.stat(0).getStart().getCharPositionInLine());
-            }
-        } else if (fstStat != null) {
-            semanticError("return must be the last statement",
-                    ctx.stat(0).getStart().getLine(),
-                    ctx.stat(0).getStart().getCharPositionInLine());
-        }
+//        if (sndStat != null && fstStat != null) {
+//            if (!fstStat.checkType(sndStat)) {
+//                semanticError("conflicting return types",
+//                        ctx.stat(0).getStart().getLine(),
+//                        ctx.stat(0).getStart().getCharPositionInLine());
+//            }
+//        } else if (fstStat != null) {
+//            semanticError("return must be the last statement",
+//                    ctx.stat(0).getStart().getLine(),
+//                    ctx.stat(0).getStart().getCharPositionInLine());
+//        }
 
         return sndStat;
     }
@@ -307,14 +307,9 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
         Iterator<WACC_Type> argListIter = argList.iterator();
         Iterator<WACC_Type> funcIterator = function.getParameters().iterator();
-        while(argListIter.hasNext() && funcIterator.hasNext()) {
 
-            if((argListIter.hasNext() && !funcIterator.hasNext())
-                    || (!argListIter.hasNext() && funcIterator.hasNext()) ) {
-                semanticError(" incorrect amount of arguments " + funcName,
-                        ctx.argList().getStart().getLine(),
-                        ctx.argList().getStart().getCharPositionInLine());
-            }
+
+        while(argListIter.hasNext() && funcIterator.hasNext()) {
 
             if (!argListIter.next().checkType(funcIterator.next())){
                 semanticError(" arguments do not match function " + funcName,
@@ -322,6 +317,13 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
                         ctx.argList().getStart().getCharPositionInLine());
 
             }
+        }
+
+        if(argListIter.hasNext()
+                || funcIterator.hasNext())  {
+            semanticError(" incorrect amount of arguments " + funcName,
+                    ctx.argList().getStart().getLine(),
+                    ctx.argList().getStart().getCharPositionInLine());
         }
 
 
@@ -509,14 +511,14 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
                     , ctx.binaryOper().getStart().getCharPositionInLine());
         }
 
+
         if ((operation.equals("<") || operation.equals(">") || operation.equals("<=")
                 || operation.equals(">="))
-                && !expr1.checkType(expr2) && (!expr1.checkType(new WACC_BaseType(BaseType.CHAR))
-                || !expr1.checkType(new WACC_BaseType(BaseType.INT)))) {
+                && !(expr1.checkType(expr2) && (expr1.checkType(new WACC_BaseType(BaseType.CHAR))
+                || expr1.checkType(new WACC_BaseType(BaseType.INT))))) {
             semanticError("this binary operation can only be applied two equal types of int and chars", ctx.binaryOper().getStart().getLine()
                     , ctx.binaryOper().getStart().getCharPositionInLine());
         }
-
 
         if ((operation.equals("==") || operation.equals("!=")) && !expr1.checkType(expr2) && (
                 !expr1.checkType(new WACC_BaseType(BaseType.CHAR)) || !expr1.checkType(new WACC_BaseType(BaseType.BOOL))
@@ -543,8 +545,9 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         WACC_Type expr1 = visit(ctx.expr(0));
         WACC_Type expr2 = visit(ctx.expr(1));
 
-        if (!expr1.checkType(expr2) && !expr1.checkType(new WACC_BaseType(BaseType.BOOL))) {
-            semanticError("OR, AND operation can only be applied two booleans", ctx.logicalOper().getStart().getLine()
+        if (!expr1.checkType(expr2) || !expr1.checkType(new WACC_BaseType(BaseType.BOOL))) {
+            semanticError("OR, AND operation can only be applied two booleans",
+                    ctx.logicalOper().getStart().getLine()
                     , ctx.logicalOper().getStart().getCharPositionInLine());
         }
 
