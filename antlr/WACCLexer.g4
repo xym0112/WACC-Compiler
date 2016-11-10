@@ -97,3 +97,5 @@ Ident    : (UNDERSCORE | LOWERCHAR | UPPERCHAR) (UNDERSCORE | UPPERCHAR | LOWERC
 
 Comment  : HASH ~[\r\n]* -> skip;
 WS       : [ \t\n]+ -> skip;
+
+ERROR : .;

@@ -22,9 +22,8 @@ public class SyntaxVisitor extends WACCParserBaseVisitor<RETURNTYPE> {
         RETURNTYPE result = visit(ctx.stat());
 
         if (result == RETURNTYPE.RETURN) {
-            printSyntaxError("return statement passed in Main Function",
-                    ctx.stat().getStop().getLine(),
-                    ctx.stat().getStop().getCharPositionInLine());
+            System.out.println("Global return not Supported");
+            System.exit(100);
         }
 
         for (WACCParser.FuncContext func: ctx.func()){
@@ -150,6 +149,12 @@ public class SyntaxVisitor extends WACCParserBaseVisitor<RETURNTYPE> {
                         ctx.unaryOper().getStop().getLine(),
                         ctx.unaryOper().getStop().getCharPositionInLine());
             }
+        }
+
+        if (ctx.unaryOper().getText().equals("+") && ctx.expr() instanceof WACCParser.STRLITERContext){
+            printSyntaxError("++ cannot be applied to strings",
+                    ctx.unaryOper().getStop().getLine(),
+                    ctx.unaryOper().getStop().getCharPositionInLine());
         }
 
         return RETURNTYPE.NONE;
