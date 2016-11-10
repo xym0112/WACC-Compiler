@@ -53,6 +53,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
             currentST = currentST.getEncSymTable();
         }
 
+        visit(ctx.stat());
         return null;
     }
 
@@ -108,15 +109,15 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         Variable variable = new Variable(varType);
 
         // check if we already declared the variable
-        if ((currentST.lookUpAllVar(varName) != null)
-                && (currentST.lookUpAllVar(varName).isDeclared())) {
+        if ((currentST.lookupVar(varName) != null)
+                && (currentST.lookupVar(varName).isDeclared())) {
             semanticError("variable " + varName + " is assigned to an already declared variable",
                     ctx.Ident().getSymbol().getLine(),
                     ctx.Ident().getSymbol().getCharPositionInLine());
         }
 
         // chck if we added a nondeclared variable in symbolTable
-        if (currentST.lookUpAllVar(varName) != null) {
+        if (currentST.lookupVar(varName) != null) {
             semanticError("non declared variable " + varName + " found in Symbol Table.",
                     ctx.Ident().getSymbol().getLine(),
                     ctx.Ident().getSymbol().getCharPositionInLine());
@@ -564,7 +565,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
                     ctx.Ident().getSymbol().getCharPositionInLine());
         }
 
-        if (!(var.getType() instanceof WACC_ArrayType)) {
+        if (!(var.getType() instanceof WACC_ArrayType || var.getType().checkType(new WACC_BaseType(BaseType.STRING)))) {
             semanticError(ctx.Ident().getText()
                             + " is not an array",
                     ctx.Ident().getSymbol().getLine(),
@@ -581,12 +582,17 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
             }
         }
 
-        return ((WACC_ArrayType)var.getType()).getType();
+        if (var.getType() instanceof WACC_ArrayType) {
+            return ((WACC_ArrayType) var.getType()).getType();
+        }
+
+        // The case that string is indexed
+        return new WACC_BaseType(BaseType.CHAR);
     }
 
     @Override
     public WACC_Type visitArrayLiter(@NotNull ArrayLiterContext ctx) {
-        if (ctx.expr(0) == null) return new WACC_ArrayType(null);
+        if (ctx.expr(0) == null) return new WACC_ArrayType(new WACC_BaseType(BaseType.ANY));
 
         WACC_Type fstType = visit(ctx.expr(0));
 
