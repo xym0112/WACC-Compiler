@@ -1,11 +1,16 @@
+package WACCSemantics;
+
 import antlr.WACCParser;
 import antlr.WACCParserBaseVisitor;
 import org.antlr.v4.runtime.misc.NotNull;
-import org.omg.CORBA.StringHolder;
+
+import java.math.BigInteger;
 
 public class SyntaxVisitor extends WACCParserBaseVisitor<Boolean>{
 
     private String functionName = null;
+    private final double MAXINT = Math.pow(31, 2) - 1;
+    private final double MININT = - Math.pow(31, 2);
 
     @Override
     public Boolean visitProg(@NotNull WACCParser.ProgContext ctx) {
@@ -14,8 +19,7 @@ public class SyntaxVisitor extends WACCParserBaseVisitor<Boolean>{
         Boolean result = visit(ctx.stat());
 
         if (result) {
-            System.out.println("Syntax Error: Return statement passed in Main Function");
-            System.exit(100);
+            printSyntaxError("return statement passed in Main Function");
         }
 
         for (WACCParser.FuncContext func: ctx.func()){
@@ -25,18 +29,19 @@ public class SyntaxVisitor extends WACCParserBaseVisitor<Boolean>{
         return true;
     }
 
+
     @Override
     public Boolean visitFunc(@NotNull WACCParser.FuncContext ctx) {
 
         functionName = ctx.Ident().getText();
         Boolean result = visit(ctx.stat());
         if (!result){
-            System.out.println("Syntax Error: Return statement missing in Function '" + functionName + "'");
-            System.exit(100);
+            printSyntaxError("return statement missing in Function '" + functionName + "'");
         }
         return true;
     }
 
+    // Statements
 
     @Override
     public Boolean visitSKIPSTAT(@NotNull WACCParser.SKIPSTATContext ctx) {
@@ -45,21 +50,31 @@ public class SyntaxVisitor extends WACCParserBaseVisitor<Boolean>{
 
     @Override
     public Boolean visitEXIT(@NotNull WACCParser.EXITContext ctx) {
+        visitChildren(ctx);
         return true;
     }
 
     @Override
-    public Boolean visitCreateVariable(@NotNull WACCParser.CreateVariableContext ctx) {
+    public Boolean visitCREATEVAR(@NotNull WACCParser.CREATEVARContext ctx) {
+        visitChildren(ctx);
         return false;
     }
 
     @Override
     public Boolean visitASSIGNVAR(@NotNull WACCParser.ASSIGNVARContext ctx) {
+        visitChildren(ctx);
+        return false;
+    }
+
+    @Override
+    public Boolean visitREAD(@NotNull WACCParser.READContext ctx) {
+        visitChildren(ctx);
         return false;
     }
 
     @Override
     public Boolean visitFREE(@NotNull WACCParser.FREEContext ctx) {
+        visitChildren(ctx);
         return false;
     }
 
@@ -70,12 +85,24 @@ public class SyntaxVisitor extends WACCParserBaseVisitor<Boolean>{
 
     @Override
     public Boolean visitPRINT(@NotNull WACCParser.PRINTContext ctx) {
+        visitChildren(ctx);
         return false;
     }
 
     @Override
     public Boolean visitPRINTLN(@NotNull WACCParser.PRINTLNContext ctx) {
+        visitChildren(ctx);
         return false;
+    }
+
+    @Override
+    public Boolean visitIF(@NotNull WACCParser.IFContext ctx) {
+        return visit(ctx.stat(0)) && visit(ctx.stat(1));
+    }
+
+    @Override
+    public Boolean visitWHILE(@NotNull WACCParser.WHILEContext ctx) {
+        return visit(ctx.stat());
     }
 
     @Override
@@ -86,19 +113,27 @@ public class SyntaxVisitor extends WACCParserBaseVisitor<Boolean>{
     @Override
     public Boolean visitSEQUENCE(@NotNull WACCParser.SEQUENCEContext ctx) {
         if (visit(ctx.stat(0))){
-            System.out.println("Syntax Error: Cannot Implement code after Return statement in Function '" +  functionName + "'");
-            System.exit(100);
+            printSyntaxError("cannot Implement code after Return statement in Function '" +  functionName + "'");
         }
+
         return visit(ctx.stat(1));
     }
 
-    @Override
-    public Boolean visitIF(@NotNull WACCParser.IFContext ctx) {
-        return visit(ctx.ifStatement().stat(0)) && visit(ctx.ifStatement().stat(1));
-    }
+    // Big int assignment
 
     @Override
-    public Boolean visitWHILE(@NotNull WACCParser.WHILEContext ctx) {
-        return visit(ctx.whileStatement().stat());
+    public Boolean visitUNSIGNED(@NotNull WACCParser.UNSIGNEDContext ctx) {
+        double intVal = Double.parseDouble(ctx.UNSIGNED().getText());
+
+        if (intVal > MAXINT || intVal < MININT) {
+            printSyntaxError("this integermust be between -2^31 and 2^31 + 1");
+        }
+
+        return super.visitUNSIGNED(ctx);
+    }
+
+    private void printSyntaxError(String msg) {
+        System.out.println("Syntax error: " + msg);
+        System.exit(100);
     }
 }

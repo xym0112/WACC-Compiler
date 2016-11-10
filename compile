@@ -3,5 +3,5 @@
 # You are free to change the language used for this script,
 # but do *not* change its name.
 
-java -cp bin:lib/antlr-4.4-complete.jar WACCSemantics.WACCDemo $1 < $1
+java -cp bin:lib/antlr-4.4-complete.jar WACCSemantics.WACCFrontEnd $1 < $1
 exit $?

@@ -10,6 +10,6 @@
 
 begin
   bool b = true ;
-  read b ; 
-  println b 
+  read b ;
+  println b
 end

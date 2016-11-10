@@ -1,3 +1,5 @@
+package WACCSemantics;
+
 import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.misc.Nullable;
@@ -29,7 +31,7 @@ public class ErrorListener extends ConsoleErrorListener {
             for (int i=start; i<=stop; i++) System.err.print("^");
         }
         System.err.println("");
-        System.err.println("line " + line + " " + lines[line]);
+        System.err.println("line " + line + " ");
         System.err.println();
     }
 }

@@ -109,7 +109,6 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         String varName = ctx.Ident().getText();
         Variable variable = new Variable(varType);
 
-
         // check if we already declared the variable
         if ((currentST.lookupVar(varName) != null)
                 && (currentST.lookupVar(varName).isDeclared())) {
@@ -257,22 +256,9 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitSEQUENCE(@NotNull SEQUENCEContext ctx) {
-        WACC_Type fstStat = visit(ctx.stat(0));
-        WACC_Type sndStat = visit(ctx.stat(1));
+        visit(ctx.stat(0));
 
-//        if (sndStat != null && fstStat != null) {
-//            if (!fstStat.checkType(sndStat)) {
-//                semanticError("conflicting return types",
-//                        ctx.stat(0).getStart().getLine(),
-//                        ctx.stat(0).getStart().getCharPositionInLine());
-//            }
-//        } else if (fstStat != null) {
-//            semanticError("return must be the last statement",
-//                    ctx.stat(0).getStart().getLine(),
-//                    ctx.stat(0).getStart().getCharPositionInLine());
-//        }
-
-        return sndStat;
+        return visit(ctx.stat(1));
     }
 
     // Assign RHS
