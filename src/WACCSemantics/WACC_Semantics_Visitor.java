@@ -108,6 +108,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         String varName = ctx.Ident().getText();
         Variable variable = new Variable(varType);
 
+
         // check if we already declared the variable
         if ((currentST.lookupVar(varName) != null)
                 && (currentST.lookupVar(varName).isDeclared())) {
@@ -125,6 +126,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
         // check if the var's types conflict with the lhs
         if (!varType.checkType(varValue)){
+
             semanticError("variable " + varName + " is assigned to a value of different type",
                     ctx.Ident().getSymbol().getLine(),
                     ctx.Ident().getSymbol().getCharPositionInLine());
@@ -244,7 +246,6 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         // Create a new symbol table with the current one as its parent
         currentST = new SymbolTable(currentST);
 
-        //TODO:Test var scopes once we have them
         WACC_Type statType = visit(ctx.stat());
 
         // Make current symbol table the previous ones parent
@@ -403,6 +404,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitTYPEARRAY(@NotNull TYPEARRAYContext ctx) {
+
         return new WACC_ArrayType(visit(ctx.type()));
     }
 
@@ -562,7 +564,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitPAIRARRAYTYPE(@NotNull PAIRARRAYTYPEContext ctx) {
-        return visit(ctx.type());
+        return new WACC_ArrayType(visit(ctx.type()));
     }
 
     @Override
