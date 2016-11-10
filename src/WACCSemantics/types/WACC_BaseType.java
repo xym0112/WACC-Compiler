@@ -17,6 +17,13 @@ public class WACC_BaseType implements WACC_Type {
 
         // TODO: consider strings
 
+        if ((ident instanceof WACC_ArrayType) &&
+                ((WACC_ArrayType) ident).getType().checkType(new WACC_BaseType(BaseType.CHAR)) &&
+                        (this.getType() == BaseType.STRING)){
+            return true;
+        }
+
+
         if (type == BaseType.ANY){
             return true;
         }

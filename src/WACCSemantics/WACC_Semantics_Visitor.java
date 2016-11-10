@@ -106,10 +106,6 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         String varName = ctx.Ident().getText();
         Variable variable = new Variable(varType);
 
-//        System.out.println();
-//        System.out.println(varType);
-//        System.out.println(varValue);
-
         // check if we already declared the variable
         if ((currentST.lookUpAllVar(varName) != null)
                 && (currentST.lookUpAllVar(varName).isDeclared())) {
@@ -142,6 +138,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
     public WACC_Type visitASSIGNVAR(@NotNull ASSIGNVARContext ctx) {
         WACC_Type lhs = visit(ctx.assignLhs());
         WACC_Type rhs = visit(ctx.assignRhs());
+
         if (!(lhs.checkType(rhs))) {
             semanticError("Variable assigned to wrong type at ",
                     ctx.ASSIGN().getSymbol().getLine(),
@@ -168,8 +165,12 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
     public WACC_Type visitFREE(@NotNull FREEContext ctx) {
         WACC_Type exprType = visit(ctx.expr());
 
-        if(!(exprType instanceof WACC_ArrayType)
-                || (exprType instanceof WACC_PairType) ){
+//        System.out.println();
+//        System.out.println(exprType);
+//        System.out.println((exprType instanceof WACC_PairType));
+
+        if(!((exprType instanceof WACC_ArrayType)
+                || (exprType instanceof WACC_PairType)) ){
             semanticError("Variable cannot be freed at ",
                     ctx.expr().getStop().getLine(),
                     ctx.expr().getStop().getCharPositionInLine());
@@ -583,7 +584,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
             }
         }
 
-        return var.getType();
+        return ((WACC_ArrayType)var.getType()).getType();
     }
 
     @Override
