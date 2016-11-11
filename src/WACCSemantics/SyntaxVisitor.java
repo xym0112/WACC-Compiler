@@ -30,14 +30,16 @@ public class SyntaxVisitor extends WACCParserBaseVisitor < RETURNTYPE > {
 
     @Override
     public RETURNTYPE visitFunc(@NotNull WACCParser.FuncContext ctx) {
-
         functionName = ctx.Ident().getText();
         RETURNTYPE result = visit(ctx.stat());
+
+        // functions need to end with return or exit
         if (!(result == RETURNTYPE.RETURN || result == RETURNTYPE.EXIT)) {
-            printSyntaxError("return statement missing in Function '" + functionName + "'",
+            printSyntaxError("return statement missing in function '" + functionName + "'",
                     ctx.Ident().getSymbol().getLine(),
                     ctx.Ident().getSymbol().getCharPositionInLine());
         }
+
         return RETURNTYPE.NONE;
     }
 
@@ -100,13 +102,10 @@ public class SyntaxVisitor extends WACCParserBaseVisitor < RETURNTYPE > {
         RETURNTYPE expr1 = visit(ctx.stat(0));
         RETURNTYPE expr2 = visit(ctx.stat(1));
 
-        if (expr1 == RETURNTYPE.NONE) {
-            return RETURNTYPE.NONE;
-        } else if (expr2 == RETURNTYPE.NONE) {
-            return RETURNTYPE.NONE;
-        } else {
-            return RETURNTYPE.RETURN;
-        }
+        // if either body of if return nothing then return nothing
+        if (expr1 == RETURNTYPE.NONE || expr2 == RETURNTYPE.NONE) return RETURNTYPE.NONE;
+
+        return RETURNTYPE.RETURN;
     }
 
     @Override
@@ -121,16 +120,18 @@ public class SyntaxVisitor extends WACCParserBaseVisitor < RETURNTYPE > {
 
     @Override
     public RETURNTYPE visitSEQUENCE(@NotNull WACCParser.SEQUENCEContext ctx) {
-        RETURNTYPE expr = visit(ctx.stat(0));
+        RETURNTYPE expr1 = visit(ctx.stat(0));
         RETURNTYPE expr2 = visit(ctx.stat(1));
 
-        if ((ctx.getParent() instanceof WACCParser.ProgContext) && expr == RETURNTYPE.RETURN) {
+        if ((ctx.getParent() instanceof WACCParser.ProgContext) && expr1 == RETURNTYPE.RETURN) {
+            // special semantic case to catch return statements in the top level scope
             System.out.println("Semantic error: return statement cannot be in main on line " + ctx.stat(1).getStop().getText() + " and position " + ctx.stat(1).getStop().getText());
             System.exit(200);
         }
 
-        if (expr == RETURNTYPE.RETURN) {
-            printSyntaxError("cannot implement code after Return statement in Function '" + functionName + "'",
+        // if the first expr in sequence is return and the second exists
+        if (expr1 == RETURNTYPE.RETURN && expr2 != null) {
+            printSyntaxError("cannot implement code after return statement in function '" + functionName + "'",
                     ctx.stat(0).getStop().getLine(),
                     ctx.stat(0).getStop().getCharPositionInLine());
         }
@@ -140,6 +141,7 @@ public class SyntaxVisitor extends WACCParserBaseVisitor < RETURNTYPE > {
 
     @Override
     public RETURNTYPE visitUNARYOP(@NotNull WACCParser.UNARYOPContext ctx) {
+        // if the expression is a unary operation and its operation is minus
         if (ctx.unaryOper().getText().equals("-") && ctx.expr() instanceof WACCParser.UNSIGNEDContext) {
             long intVal = Long.parseLong(ctx.expr().getText());
 
@@ -150,6 +152,7 @@ public class SyntaxVisitor extends WACCParserBaseVisitor < RETURNTYPE > {
             }
         }
 
+        // if the unary operation is plus and the expr is string
         if (ctx.unaryOper().getText().equals("+") && ctx.expr() instanceof WACCParser.STRLITERContext) {
             printSyntaxError("++ cannot be applied to strings",
                     ctx.unaryOper().getStop().getLine(),
@@ -163,6 +166,8 @@ public class SyntaxVisitor extends WACCParserBaseVisitor < RETURNTYPE > {
 
     @Override
     public RETURNTYPE visitUNSIGNED(@NotNull WACCParser.UNSIGNEDContext ctx) {
+        // if the parent is a unary operation, then don't run checks as checking
+        // has already been performed
         if (ctx.getParent() instanceof WACCParser.UNARYOPContext) return RETURNTYPE.NONE;
 
         long intVal = Long.parseLong(ctx.UNSIGNED().getText());

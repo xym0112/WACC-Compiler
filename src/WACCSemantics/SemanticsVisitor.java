@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
-
     SymbolTable currentST;
 
     public SemanticsVisitor() {
@@ -293,7 +292,7 @@ public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
         WACC_Function function = currentST.lookUpAllFunc(funcName);
 
         if (function == null) {
-            semanticError(" function " + funcName + " not defined",
+            semanticError("function " + funcName + " not defined",
                     ctx.Ident().getSymbol().getLine(),
                     ctx.Ident().getSymbol().getCharPositionInLine());
         }
@@ -312,9 +311,8 @@ public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
 
 
         while(argListIter.hasNext() && funcIterator.hasNext()) {
-
             if (!argListIter.next().checkType(funcIterator.next())){
-                semanticError(" arguments do not match function " + funcName,
+                semanticError("arguments do not match function" + funcName,
                         ctx.argList().getStart().getLine(),
                         ctx.argList().getStart().getCharPositionInLine());
 
@@ -323,7 +321,7 @@ public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
 
         if(argListIter.hasNext()
                 || funcIterator.hasNext())  {
-            semanticError(" incorrect amount of arguments " + funcName,
+            semanticError("incorrect amount of arguments" + funcName,
                     ctx.argList().getStart().getLine(),
                     ctx.argList().getStart().getCharPositionInLine());
         }
@@ -372,6 +370,7 @@ public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitPAIRPAIR(@NotNull PAIRPAIRContext ctx) {
+        // return a new empty pair
         return new WACC_PairType();
     }
 
@@ -463,12 +462,15 @@ public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitEXPRIDENT(@NotNull EXPRIDENTContext ctx) {
-        if (currentST.lookUpAllVar(ctx.Ident().getText()) == null) {
-            semanticError(ctx.Ident().getText() + " Identifier doesn't exist", ctx.Ident().getSymbol().getLine(),
+        Variable var = currentST.lookUpAllVar(ctx.Ident().getText());
+
+        if (var == null) {
+            semanticError(ctx.Ident().getText() + " identifier doesn't exist",
+                    ctx.Ident().getSymbol().getLine(),
                     ctx.Ident().getSymbol().getCharPositionInLine());
         }
 
-        return currentST.lookUpAllVar(ctx.Ident().getText()).getType();
+        return var.getType();
     }
 
     @Override
@@ -478,12 +480,10 @@ public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
 
         if (operation.equals("!")
                 && !expr.checkType(new WACC_BaseType(BaseType.BOOL))) {
-
             unaryOperationError(operation, ctx, expr.toString());
         } else if ((!expr.checkType(new WACC_BaseType(BaseType.INT))
                 && (operation.equals("+") || operation.equals("-")
                  || operation.equals("chr")))) {
-
             unaryOperationError(operation, ctx, expr.toString());
         } else if (operation.equals("len") && !(expr instanceof WACC_ArrayType)) {
             unaryOperationError(operation, ctx, expr.toString());
@@ -493,6 +493,7 @@ public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
             unaryOperationError(operation, ctx, expr.toString());
         }
 
+        // len and ord return int and chr returns char
         if (operation.equals("len") || operation.equals("ord")) return new WACC_BaseType(BaseType.INT);
         if (operation.equals("chr")) return new WACC_BaseType(BaseType.CHAR);
 
@@ -510,16 +511,17 @@ public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
             && (!expr1.checkType(new WACC_BaseType(BaseType.INT)) ||
                 !expr2.checkType(new WACC_BaseType(BaseType.INT)))
                 ) {
-            semanticError("this binary operation can only be applied to int", ctx.binaryOper().getStart().getLine()
+            semanticError("this binary operation can only be applied to int",
+                    ctx.binaryOper().getStart().getLine()
                     , ctx.binaryOper().getStart().getCharPositionInLine());
         }
-
 
         if ((operation.equals("<") || operation.equals(">") || operation.equals("<=")
                 || operation.equals(">="))
                 && !(expr1.checkType(expr2) && (expr1.checkType(new WACC_BaseType(BaseType.CHAR))
                 || expr1.checkType(new WACC_BaseType(BaseType.INT))))) {
-            semanticError("this binary operation can only be applied two equal types of int and chars", ctx.binaryOper().getStart().getLine()
+            semanticError("this binary operation can only be applied two equal types of int and chars",
+                    ctx.binaryOper().getStart().getLine()
                     , ctx.binaryOper().getStart().getCharPositionInLine());
         }
 
@@ -528,14 +530,14 @@ public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
                 || !expr1.checkType(new WACC_BaseType(BaseType.INT)) || !(expr1 instanceof WACC_PairType))) {
 
 
-            semanticError(operation + " operation can only be applied two equal types of char, bool, int and pair", ctx.binaryOper().getStart().getLine()
+            semanticError(operation + " operation can only be applied two equal types of char, bool, int and pair",
+                    ctx.binaryOper().getStart().getLine()
                     , ctx.binaryOper().getStart().getCharPositionInLine());
         }
 
 
         if (operation.equals("<=") || operation.equals(">=") || operation.equals("==")
-                || operation.equals("!=") || operation.equals("<") || operation.equals(">")
-                ) {
+                || operation.equals("!=") || operation.equals("<") || operation.equals(">")) {
             return new WACC_BaseType(BaseType.BOOL);
         }
 
@@ -571,6 +573,7 @@ public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
     @Override
     public WACC_Type visitArrayElem(@NotNull ArrayElemContext ctx) {
         Variable var = currentST.lookUpAllVar(ctx.Ident().getText());
+
         if (var == null) {
             semanticError("var " + ctx.Ident().getText()
                             + " does not exist",
@@ -578,6 +581,7 @@ public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
                     ctx.Ident().getSymbol().getCharPositionInLine());
         }
 
+        // arrays and strings can be indexed
         if (!(var.getType() instanceof WACC_ArrayType || var.getType().checkType(new WACC_BaseType(BaseType.STRING)))) {
             semanticError(ctx.Ident().getText()
                             + " is not an array",
@@ -585,8 +589,10 @@ public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
                     ctx.Ident().getSymbol().getCharPositionInLine());
         }
 
+        // you can only index with ints
         for (ExprContext expr : ctx.expr()) {
             WACC_Type type = visit(expr);
+
             if (!(type.checkType(new WACC_BaseType(BaseType.INT)))) {
                 semanticError(expr.getText()
                                 + " should be an int",
@@ -599,12 +605,13 @@ public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
             return ((WACC_ArrayType) var.getType()).getType();
         }
 
-        // The case that string is indexed
+        // The case that string is indexed, then  it  returns a char
         return new WACC_BaseType(BaseType.CHAR);
     }
 
     @Override
     public WACC_Type visitArrayLiter(@NotNull ArrayLiterContext ctx) {
+        // if array isn't initialised, return a new array of type any
         if (ctx.expr(0) == null) return new WACC_ArrayType(new WACC_BaseType(BaseType.ANY));
 
         WACC_Type fstType = visit(ctx.expr(0));
@@ -620,13 +627,14 @@ public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
         return new WACC_ArrayType(fstType);
     }
 
+    // prints semantic error in the case of unary operation
     private void unaryOperationError(String operation, UNARYOPContext ctx, String type) {
         semanticError(operation + " unary operation can not be applied to " + type,
                 ctx.unaryOper().getStop().getLine(),
                 ctx.unaryOper().getStop().getCharPositionInLine());
     }
 
-    // Print Semantic Error helper method
+    // print Semantic Error helper method
     private void semanticError(String msg, int line, int pos) {
         System.err.println("Semantic Error: " + msg
                         + " at line " + line
