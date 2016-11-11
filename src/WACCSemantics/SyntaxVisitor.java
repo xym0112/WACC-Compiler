@@ -10,7 +10,7 @@ enum RETURNTYPE {
     NONE
 }
 
-public class SyntaxVisitor extends WACCParserBaseVisitor < RETURNTYPE > {
+class SyntaxVisitor extends WACCParserBaseVisitor < RETURNTYPE > {
 
     private String functionName = null;
     private final long MAXINT = 2147483647;
@@ -21,9 +21,7 @@ public class SyntaxVisitor extends WACCParserBaseVisitor < RETURNTYPE > {
         //Checking if no return statement is passed in main
         visit(ctx.stat());
 
-        for (WACCParser.FuncContext func: ctx.func()) {
-            visit(func);
-        }
+        ctx.func().forEach(this::visit);
 
         return RETURNTYPE.NONE;
     }

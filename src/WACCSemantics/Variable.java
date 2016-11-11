@@ -1,18 +1,17 @@
 package WACCSemantics;
 
 import WACCSemantics.types.WACC_Type;
-import org.antlr.v4.runtime.misc.NotNull;
 
-public class Variable {
+class Variable {
     private WACC_Type type;
     private boolean declared;
 
-    public Variable(WACC_Type type) {
+    Variable(WACC_Type type) {
         this.type = type;
         this.declared = false;
     }
 
-    public Variable(WACC_Type type, boolean declared) {
+    Variable(WACC_Type type, boolean declared) {
         this.type = type;
         this.declared = declared;
     }
@@ -21,11 +20,11 @@ public class Variable {
         return type;
     }
 
-    public boolean isDeclared() {
+    boolean isDeclared() {
         return declared;
     }
 
-    public void setDeclared(boolean declared) {
+    void setDeclared(boolean declared) {
         this.declared = declared;
     }
 }
