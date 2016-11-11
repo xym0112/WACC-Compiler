@@ -23,19 +23,19 @@ public class WACC_PairType implements WACC_Type {
     }
 
     @Override
-    public boolean checkType(WACC_Type ident) {
+    public boolean checkType(WACC_Type identifier) {
 
-        if (ident instanceof WACC_BaseType) {
-            WACC_BaseType baseType = (WACC_BaseType) ident;
+        if (identifier instanceof WACC_BaseType) {
+            WACC_BaseType baseType = (WACC_BaseType) identifier;
             return baseType.getType()==BaseType.ANY;
         }
 
-        if (!(ident instanceof WACC_PairType)) return false;
+        if (!(identifier instanceof WACC_PairType)) return false;
 
-        WACC_PairType identPairType = (WACC_PairType) ident;
+        WACC_PairType identifierPairType = (WACC_PairType) identifier;
 
-        return identPairType.getFirst().checkType(this.first)
-                && identPairType.getSecond().checkType(this.second);
+        return identifierPairType.getFirst().checkType(this.first)
+                && identifierPairType.getSecond().checkType(this.second);
     }
 
     @Override

@@ -45,7 +45,5 @@ public class ErrorListener extends ConsoleErrorListener {
         if ( start>=0 && stop>=0 ) {
             for (int i=start; i<=stop; i++) System.err.print("^");
         }
-
-        System.err.println("");
     }
 }

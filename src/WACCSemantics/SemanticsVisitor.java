@@ -8,10 +8,11 @@ import org.antlr.v4.runtime.misc.NotNull;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
-    SymbolTable currentST;
+class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
 
-    public SemanticsVisitor() {
+    private SymbolTable currentST;
+
+    SemanticsVisitor() {
         this.currentST = new SymbolTable();
     }
 
@@ -306,12 +307,12 @@ public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
             }
         }
 
-        Iterator<WACC_Type> argListIter = argList.iterator();
+        Iterator<WACC_Type> argListIterator = argList.iterator();
         Iterator<WACC_Type> funcIterator = function.getParameters().iterator();
 
 
-        while(argListIter.hasNext() && funcIterator.hasNext()) {
-            if (!argListIter.next().checkType(funcIterator.next())){
+        while(argListIterator.hasNext() && funcIterator.hasNext()) {
+            if (!argListIterator.next().checkType(funcIterator.next())){
                 semanticError("arguments do not match function" + funcName,
                         ctx.argList().getStart().getLine(),
                         ctx.argList().getStart().getCharPositionInLine());
@@ -319,7 +320,7 @@ public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
             }
         }
 
-        if(argListIter.hasNext()
+        if(argListIterator.hasNext()
                 || funcIterator.hasNext())  {
             semanticError("incorrect amount of arguments" + funcName,
                     ctx.argList().getStart().getLine(),
