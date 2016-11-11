@@ -8,11 +8,11 @@ import org.antlr.v4.runtime.misc.NotNull;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
+class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
 
-    SymbolTable currentST;
+    private SymbolTable currentST;
 
-    public SemanticsVisitor() {
+    SemanticsVisitor() {
         this.currentST = new SymbolTable();
     }
 
@@ -31,7 +31,7 @@ public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
             // create a new scope for the current function
             currentST = new SymbolTable(currentST);
 
-            ArrayList<WACC_Type> funcParams = new ArrayList<WACC_Type>();
+            ArrayList<WACC_Type> funcParams = new ArrayList<>();
 
             if (func.paramList() != null) {
                 for (int i = 0; i < func.paramList().param().size(); i++) {
@@ -299,7 +299,7 @@ public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
         }
 
         ArgListContext args = ctx.argList();
-        ArrayList<WACC_Type> argList = new ArrayList<WACC_Type>();
+        ArrayList<WACC_Type> argList = new ArrayList<>();
 
         if (args != null) {
             for (ExprContext arg : args.expr()) {
@@ -307,13 +307,13 @@ public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
             }
         }
 
-        Iterator<WACC_Type> argListIter = argList.iterator();
+        Iterator<WACC_Type> argListIterator = argList.iterator();
         Iterator<WACC_Type> funcIterator = function.getParameters().iterator();
 
 
-        while(argListIter.hasNext() && funcIterator.hasNext()) {
+        while(argListIterator.hasNext() && funcIterator.hasNext()) {
 
-            if (!argListIter.next().checkType(funcIterator.next())){
+            if (!argListIterator.next().checkType(funcIterator.next())){
                 semanticError(" arguments do not match function " + funcName,
                         ctx.argList().getStart().getLine(),
                         ctx.argList().getStart().getCharPositionInLine());
@@ -321,7 +321,7 @@ public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
             }
         }
 
-        if(argListIter.hasNext()
+        if(argListIterator.hasNext()
                 || funcIterator.hasNext())  {
             semanticError(" incorrect amount of arguments " + funcName,
                     ctx.argList().getStart().getLine(),
@@ -423,14 +423,15 @@ public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
     }
 
     private WACC_Type visitBaseTypeHelper(String baseType) {
-        if (baseType.equals("char")) {
-            return new WACC_BaseType(BaseType.CHAR);
-        } else if (baseType.equals("int")) {
-            return new WACC_BaseType(BaseType.INT);
-        } else if (baseType.equals("bool")) {
-            return new WACC_BaseType(BaseType.BOOL);
-        } else {
-            return new WACC_BaseType(BaseType.STRING);
+        switch (baseType) {
+            case "char":
+                return new WACC_BaseType(BaseType.CHAR);
+            case "int":
+                return new WACC_BaseType(BaseType.INT);
+            case "bool":
+                return new WACC_BaseType(BaseType.BOOL);
+            default:
+                return new WACC_BaseType(BaseType.STRING);
         }
     }
 

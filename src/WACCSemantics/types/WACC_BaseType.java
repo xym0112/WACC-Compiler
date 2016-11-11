@@ -1,6 +1,7 @@
 package WACCSemantics.types;
 
 public class WACC_BaseType implements WACC_Type {
+
     private BaseType type;
 
     public WACC_BaseType(BaseType type) {
@@ -12,30 +13,25 @@ public class WACC_BaseType implements WACC_Type {
     }
 
     @Override
-    public boolean checkType(WACC_Type ident) {
+    public boolean checkType(WACC_Type identifier) {
 
 
-        // TODO: consider strings
-
-        if ((ident instanceof WACC_ArrayType) &&
-                ((WACC_ArrayType) ident).getType().checkType(new WACC_BaseType(BaseType.CHAR)) &&
-                        (this.getType() == BaseType.STRING)){
-            return true;
-        }
-
-
-        if (type == BaseType.ANY){
-            return true;
-        }
-
-        if (!(ident instanceof WACC_BaseType)) return false;
-
-        WACC_BaseType identBaseType = (WACC_BaseType) ident;
-
-        if (identBaseType.getType() == BaseType.ANY)
+        if ((identifier instanceof WACC_ArrayType) &&
+                ((WACC_ArrayType) identifier).getType().checkType(new WACC_BaseType(BaseType.CHAR)) &&
+                (this.getType() == BaseType.STRING))
             return true;
 
-        return identBaseType.getType().equals(this.type);
+
+        if (type == BaseType.ANY) return true;
+
+
+        if (!(identifier instanceof WACC_BaseType)) return false;
+
+        WACC_BaseType identifierBaseType = (WACC_BaseType) identifier;
+
+        return identifierBaseType.getType() == BaseType.ANY
+                || identifierBaseType.getType().equals(this.type);
+
     }
 
     @Override
@@ -51,7 +47,6 @@ public class WACC_BaseType implements WACC_Type {
         WACC_BaseType that = (WACC_BaseType) o;
 
         return type == that.type;
-
     }
 
     @Override

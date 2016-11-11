@@ -1,6 +1,7 @@
 package WACCSemantics;
 
 import WACCSemantics.types.WACC_Type;
+import org.antlr.v4.runtime.misc.NotNull;
 
 public class Variable {
     private WACC_Type type;

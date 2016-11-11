@@ -36,10 +36,12 @@ public class WACCFrontEnd {
             SyntaxVisitor syntaxVisitor = new SyntaxVisitor();
             syntaxVisitor.visit(tree);
 
+            //Visiting the tree to check for semantic errors
             SemanticsVisitor visitor = new SemanticsVisitor();
             visitor.visit(tree); // need to add thing
+
         } catch (IOException e) {
-            System.out.println("Not Accepted");
+            System.out.println("File Not Accepted");
         } catch (IllegalArgumentException e) {
             System.out.println(e.getMessage());
         }
