@@ -8,11 +8,11 @@ import org.antlr.v4.runtime.misc.NotNull;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
+public class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
 
     SymbolTable currentST;
 
-    public WACC_Semantics_Visitor() {
+    public SemanticsVisitor() {
         this.currentST = new SymbolTable();
     }
 
@@ -28,6 +28,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
                         func.Ident().getSymbol().getCharPositionInLine());
             }
 
+            // create a new scope for the current function
             currentST = new SymbolTable(currentST);
 
             ArrayList<WACC_Type> funcParams = new ArrayList<WACC_Type>();
@@ -38,17 +39,22 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
                 }
             }
 
+            // add new function to its scopes parents symbol table
             if (!funcParams.isEmpty()) {
                 currentST.getEncSymTable().addFunc(funcName, new WACC_Function(funcRetType, funcParams, currentST));
             } else {
                 currentST.getEncSymTable().addFunc(funcName, new WACC_Function(funcRetType, currentST));
             }
 
+            // return to the scope above the current function
             currentST = currentST.getEncSymTable();
         }
 
         for (FuncContext func : ctx.func()){
+            // enter the scope of the function, visit it then return to parent symbol table
             currentST = currentST.lookUpAllFunc(func.Ident().getText()).getSymbolTable();
+            // visiting the function within its scope ensures that any variables
+            // are created and added to its scope
             visit(func);
             currentST = currentST.getEncSymTable();
         }
@@ -74,7 +80,6 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
 
     @Override
     public WACC_Type visitParam(@NotNull ParamContext ctx) {
-
         WACC_Type paramType = visit(ctx.type());
         String paramName = ctx.Ident().getText();
         Variable param = new Variable(paramType, false);
@@ -98,6 +103,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
                     ctx.expr().getStop().getCharPositionInLine());
         }
 
+        // exit code can be of any type
         return new WACC_BaseType(BaseType.ANY);
     }
 
@@ -108,7 +114,6 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         String varName = ctx.Ident().getText();
         Variable variable = new Variable(varType);
 
-        // check if we already declared the variable
         if ((currentST.lookupVar(varName) != null)
                 && (currentST.lookupVar(varName).isDeclared())) {
             semanticError("variable " + varName + " is assigned to an already declared variable",
@@ -116,14 +121,14 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
                     ctx.Ident().getSymbol().getCharPositionInLine());
         }
 
-        // chck if we added a nondeclared variable in symbolTable
+        // non declared variable
         if (currentST.lookupVar(varName) != null) {
             semanticError("non declared variable " + varName + " found in Symbol Table.",
                     ctx.Ident().getSymbol().getLine(),
                     ctx.Ident().getSymbol().getCharPositionInLine());
         }
 
-        // check if the var's types conflict with the lhs
+        // conflicting types
         if (!varType.checkType(varValue)){
 
             semanticError("variable " + varName + " is assigned to a value of different type",
@@ -143,7 +148,7 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
         WACC_Type rhs = visit(ctx.assignRhs());
 
         if (!(lhs.checkType(rhs))) {
-            semanticError("Variable assigned to wrong type at ",
+            semanticError("variable " + ctx.assignLhs().getText() + " assigned to wrong type at",
                     ctx.ASSIGN().getSymbol().getLine(),
                     ctx.ASSIGN().getSymbol().getCharPositionInLine());
         }
@@ -154,9 +159,10 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
     public WACC_Type visitREAD(@NotNull READContext ctx) {
         WACC_Type exprType = visit(ctx.assignRhs());
 
+        // can only return ints and chars
         if(!(exprType.checkType(new WACC_BaseType(BaseType.INT))
                 || (exprType.checkType(new WACC_BaseType(BaseType.CHAR))))) {
-            semanticError("Variable cannot be read into at ",
+            semanticError("variable " + ctx.assignRhs().getText() + " cannot be read into at",
                     ctx.assignRhs().getStop().getLine(),
                     ctx.assignRhs().getStop().getCharPositionInLine());
         }
@@ -168,9 +174,10 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
     public WACC_Type visitFREE(@NotNull FREEContext ctx) {
         WACC_Type exprType = visit(ctx.expr());
 
+        // only arrays and pairs can be freed
         if(!((exprType instanceof WACC_ArrayType)
                 || (exprType instanceof WACC_PairType)) ){
-            semanticError("Variable cannot be freed at ",
+            semanticError("variable cannot be freed at ",
                     ctx.expr().getStop().getLine(),
                     ctx.expr().getStop().getCharPositionInLine());
         }
@@ -208,18 +215,24 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
                     ctx.expr().getStart().getCharPositionInLine());
         }
 
+        // create a new scope for the if body and visit the body
+        // within that body scope
         currentST = new SymbolTable(currentST);
         WACC_Type ifType = visit(ctx.stat(0));
+
+        // return to parent scope
         currentST = currentST.getEncSymTable();
+        // create new scope for else scope
         currentST = new SymbolTable(currentST);
+        // visit else scope within that scope and
+        // get the type of the returned value
         WACC_Type fiType = visit(ctx.stat(1));
+        // return to parent scope
         currentST = currentST.getEncSymTable();
 
-        if (ifType == null) {
-            return fiType;
-        } else {
-            return ifType;
-        }
+        // return the type of the first body if its not null
+        if (ifType == null) return fiType;
+        return ifType;
     }
 
     @Override
@@ -232,7 +245,9 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
                     ctx.expr().getStart().getCharPositionInLine());
         }
 
+        // create a new while body scope
         currentST = new SymbolTable(currentST);
+        //
         WACC_Type innerType = visit(ctx.stat());
         currentST = currentST.getEncSymTable();
 
@@ -244,10 +259,10 @@ public class WACC_Semantics_Visitor extends WACCParserBaseVisitor<WACC_Type> {
     public WACC_Type visitBEGIN(@NotNull BEGINContext ctx) {
         // Create a new symbol table with the current one as its parent
         currentST = new SymbolTable(currentST);
-
+        // visit while body scope within that scope and
+        // get the type of the returned value
         WACC_Type statType = visit(ctx.stat());
-
-        // Make current symbol table the previous ones parent
+        // return to the parent scope
         currentST = currentST.getEncSymTable();
 
         return statType;

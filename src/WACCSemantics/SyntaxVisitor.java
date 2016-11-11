@@ -10,7 +10,7 @@ enum RETURNTYPE {
     NONE
 }
 
-public class SyntaxVisitor extends WACCParserBaseVisitor<RETURNTYPE> {
+public class SyntaxVisitor extends WACCParserBaseVisitor < RETURNTYPE > {
 
     private String functionName = null;
     private final long MAXINT = 2147483647;
@@ -21,20 +21,19 @@ public class SyntaxVisitor extends WACCParserBaseVisitor<RETURNTYPE> {
         //Checking if no return statement is passed in main
         visit(ctx.stat());
 
-        for (WACCParser.FuncContext func: ctx.func()){
+        for (WACCParser.FuncContext func: ctx.func()) {
             visit(func);
         }
 
         return RETURNTYPE.NONE;
     }
 
-
     @Override
     public RETURNTYPE visitFunc(@NotNull WACCParser.FuncContext ctx) {
 
         functionName = ctx.Ident().getText();
         RETURNTYPE result = visit(ctx.stat());
-        if (!(result == RETURNTYPE.RETURN || result == RETURNTYPE.EXIT)){
+        if (!(result == RETURNTYPE.RETURN || result == RETURNTYPE.EXIT)) {
             printSyntaxError("return statement missing in Function '" + functionName + "'",
                     ctx.Ident().getSymbol().getLine(),
                     ctx.Ident().getSymbol().getCharPositionInLine());
@@ -126,13 +125,12 @@ public class SyntaxVisitor extends WACCParserBaseVisitor<RETURNTYPE> {
         RETURNTYPE expr2 = visit(ctx.stat(1));
 
         if ((ctx.getParent() instanceof WACCParser.ProgContext) && expr == RETURNTYPE.RETURN) {
-            System.out.println("Semantic error: return statement cannot be in main on line "
-                    + ctx.stat(1).getStop().getText() + " and position " + ctx.stat(1).getStop().getText() );
+            System.out.println("Semantic error: return statement cannot be in main on line " + ctx.stat(1).getStop().getText() + " and position " + ctx.stat(1).getStop().getText());
             System.exit(200);
         }
 
-        if (expr == RETURNTYPE.RETURN){
-            printSyntaxError("cannot implement code after Return statement in Function '" +  functionName + "'",
+        if (expr == RETURNTYPE.RETURN) {
+            printSyntaxError("cannot implement code after Return statement in Function '" + functionName + "'",
                     ctx.stat(0).getStop().getLine(),
                     ctx.stat(0).getStop().getCharPositionInLine());
         }
@@ -152,7 +150,7 @@ public class SyntaxVisitor extends WACCParserBaseVisitor<RETURNTYPE> {
             }
         }
 
-        if (ctx.unaryOper().getText().equals("+") && ctx.expr() instanceof WACCParser.STRLITERContext){
+        if (ctx.unaryOper().getText().equals("+") && ctx.expr() instanceof WACCParser.STRLITERContext) {
             printSyntaxError("++ cannot be applied to strings",
                     ctx.unaryOper().getStop().getLine(),
                     ctx.unaryOper().getStop().getCharPositionInLine());
@@ -183,4 +181,3 @@ public class SyntaxVisitor extends WACCParserBaseVisitor<RETURNTYPE> {
         System.exit(100);
     }
 }
-

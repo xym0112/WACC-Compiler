@@ -36,7 +36,7 @@ public class WACCFrontEnd {
             SyntaxVisitor syntaxVisitor = new SyntaxVisitor();
             syntaxVisitor.visit(tree);
 
-            WACC_Semantics_Visitor visitor = new WACC_Semantics_Visitor();
+            SemanticsVisitor visitor = new SemanticsVisitor();
             visitor.visit(tree); // need to add thing
         } catch (IOException e) {
             System.out.println("Not Accepted");
