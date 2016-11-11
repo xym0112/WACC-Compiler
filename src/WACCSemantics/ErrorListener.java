@@ -4,7 +4,7 @@ import org.antlr.v4.runtime.*;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.misc.Nullable;
 
-public class ErrorListener extends ConsoleErrorListener {
+class ErrorListener extends ConsoleErrorListener {
     @Override
     public void syntaxError(@NotNull Recognizer<?, ?> recognizer, @Nullable Object offendingSymbol, int line, int charPositionInLine, @NotNull String msg, @Nullable RecognitionException e) {
         underlineError(recognizer,(Token)offendingSymbol,
@@ -13,9 +13,9 @@ public class ErrorListener extends ConsoleErrorListener {
         System.exit(100);
     }
 
-    protected void underlineError(Recognizer recognizer,
-                                  Token offendingToken, int line,
-                                  int charPositionInLine) {
+    private void underlineError(Recognizer recognizer,
+                                Token offendingToken, int line,
+                                int charPositionInLine) {
         System.err.println("Syntax error at line " + line + " and position " + charPositionInLine + ":");
         CommonTokenStream tokens =
                 (CommonTokenStream)recognizer.getInputStream();

@@ -7,6 +7,7 @@ import org.antlr.v4.runtime.misc.NotNull;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.stream.Collectors;
 
 class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
 
@@ -302,9 +303,7 @@ class SemanticsVisitor extends WACCParserBaseVisitor<WACC_Type> {
         ArrayList<WACC_Type> argList = new ArrayList<>();
 
         if (args != null) {
-            for (ExprContext arg : args.expr()) {
-                argList.add(visit(arg));
-            }
+            argList.addAll(args.expr().stream().map(this::visit).collect(Collectors.toList()));
         }
 
         Iterator<WACC_Type> argListIterator = argList.iterator();

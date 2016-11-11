@@ -10,35 +10,35 @@ public class SymbolTable {
     private HashMap<String, Variable> variableDictionary;
     private HashMap<String, WACC_Function> functionDictionary;
 
-    public SymbolTable(SymbolTable symbolTable) {
-        variableDictionary = new HashMap();
-        functionDictionary = new HashMap();
+    SymbolTable(SymbolTable symbolTable) {
+        variableDictionary = new HashMap<>();
+        functionDictionary = new HashMap<>();
         encSymTable = symbolTable;
     }
 
     //Top Symbol Table
-    public SymbolTable(){
-        variableDictionary = new HashMap();
-        functionDictionary = new HashMap();
+    SymbolTable(){
+        variableDictionary = new HashMap<>();
+        functionDictionary = new HashMap<>();
         encSymTable = null;
     }
 
-    public SymbolTable getEncSymTable() {
+    SymbolTable getEncSymTable() {
         return encSymTable;
     }
     
-    public Variable addVar(String varId, Variable var) {
+    Variable addVar(String varId, Variable var) {
         return variableDictionary.put(varId,var);
     }
 
-    public Variable lookupVar(String varId) {
+    Variable lookupVar(String varId) {
         return variableDictionary.get(varId);
     }
 
-    public Variable lookUpAllVar(String varId) {
+    Variable lookUpAllVar(String varId) {
 
         SymbolTable self = this;
-        Variable var = null;
+        Variable var;
 
         while (self != null) {
             var = self.lookupVar(varId);
@@ -50,18 +50,18 @@ public class SymbolTable {
         return null;
     }
 
-    public WACC_Function addFunc(String funcName, WACC_Function func) {
+    WACC_Function addFunc(String funcName, WACC_Function func) {
         return functionDictionary.put(funcName, func);
     }
 
-    public WACC_Function lookupFunc(String funcName) {
+    private WACC_Function lookupFunc(String funcName) {
         return functionDictionary.get(funcName);
     }
 
-    public WACC_Function lookUpAllFunc(String funcName) {
+    WACC_Function lookUpAllFunc(String funcName) {
 
         SymbolTable self = this;
-        WACC_Function var = null;
+        WACC_Function var;
 
         while (self != null) {
             var = self.lookupFunc(funcName);
